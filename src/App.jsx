@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dumbbell, Calendar, History, Plus, ChevronDown, ChevronUp, 
   CheckCircle, Activity, Info, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, Utensils, TrendingUp, PlusCircle, Moon, Sun
 } from 'lucide-react';
 
-// Data Master Awal
+// Data Master Awal (Fallback jika storage kosong)
 const INITIAL_EXERCISE_DATA = {
   Push: [
     { id: 'p1', name: 'Chest Press (Smith Machine)', muscle: 'Dada' },
@@ -45,21 +45,20 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  const apiKey = "AIzaSyCpBEz6r6fEaijw3JX0G7eGCGSV6ft24nw"; // Masukkan API Key Anda di sini saat di-hosting
+  // Masukkan API Key Anda di sini
+  const apiKey = "AIzaSyCpBEz6r6fEaijw3JX0G7eGCGSV6ft24nw"; 
   
-  // Menggabungkan instruksi sistem ke dalam prompt agar kompatibel dengan SEMUA versi model (termasuk gemini-pro 1.0)
   const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
 
   const payload = {
     contents: [{ parts: [{ text: combinedPrompt }] }]
   };
 
-  // Daftar model fallback (Sistem akan otomatis mencari model yang tersedia untuk API Key Anda)
   const modelsToTry = [
     typeof window !== 'undefined' && window.__app_id ? 'gemini-2.5-flash-preview-09-2025' : null,
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
-    'gemini-pro' // Fallback terakhir yang 100% tersedia di semua akun
+    'gemini-pro'
   ].filter(Boolean);
 
   for (let i = 0; i < modelsToTry.length; i++) {
@@ -77,14 +76,11 @@ const callGeminiAPI = async (prompt) => {
         const result = await response.json();
         return result.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada respons dari AI.";
       }
-      
-      // Jika error 404 (Not Found), sistem akan lanjut mencoba model berikutnya di urutan
       console.warn(`Model ${modelName} gagal: ${response.status}`);
     } catch (error) {
       console.error(`Error koneksi pada ${modelName}:`, error);
     }
   }
-  
   return "Maaf, AI Coach gagal merespons. Pastikan API Key valid atau coba lagi nanti.";
 };
 
@@ -96,27 +92,21 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
   const [showHistory, setShowHistory] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // State untuk mode edit inline
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ weight: '', sets: '', reps: '' });
 
-  // AI States
   const [aiTip, setAiTip] = useState(null);
   const [isAiTipLoading, setIsAiTipLoading] = useState(false);
-  
   const [aiAlt, setAiAlt] = useState(null);
   const [isAiAltLoading, setIsAiAltLoading] = useState(false);
-
   const [aiProgress, setAiProgress] = useState(null);
   const [isAiProgressLoading, setIsAiProgressLoading] = useState(false);
 
-  // Fungsi toggle dan fetch AI
   const handleGetTip = async () => {
     if (aiTip) { setAiTip(null); return; }
     setAiAlt(null); setAiProgress(null);
     setIsAiTipLoading(true);
-    const prompt = `Berikan satu tips form atau koneksi otot-pikiran (mind-muscle connection) untuk gerakan ${exercise.name}. Maksimal 2 kalimat.`;
-    const response = await callGeminiAPI(prompt);
+    const response = await callGeminiAPI(`Berikan satu tips form atau koneksi otot-pikiran untuk gerakan ${exercise.name}. Maksimal 2 kalimat.`);
     setAiTip(response);
     setIsAiTipLoading(false);
   };
@@ -125,8 +115,7 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
     if (aiAlt) { setAiAlt(null); return; }
     setAiTip(null); setAiProgress(null);
     setIsAiAltLoading(true);
-    const prompt = `Berikan 1 opsi alternatif latihan pengganti untuk ${exercise.name} menggunakan Dumbbell atau Mesin lain. Jelaskan cara kerjanya singkat. Maksimal 2 kalimat.`;
-    const response = await callGeminiAPI(prompt);
+    const response = await callGeminiAPI(`Berikan 1 opsi alternatif pengganti untuk ${exercise.name} menggunakan Dumbbell/Mesin. Maksimal 2 kalimat.`);
     setAiAlt(response);
     setIsAiAltLoading(false);
   };
@@ -135,18 +124,8 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
     if (aiProgress) { setAiProgress(null); return; }
     setAiTip(null); setAiAlt(null);
     setIsAiProgressLoading(true);
-    
-    // Siapkan data histori
-    const recentLogs = history.slice(0, 3).map(l => `${l.weight}kg x ${l.sets} sets x ${l.reps} reps`).join(' -> ');
-    
-    const prompt = `Saya baru saja melakukan ${exercise.name} dengan histori: ${recentLogs}. 
-    PENTING: Target baku saya adalah selalu melakukan 2 set x 8 repetisi.
-    Tolong evaluasi performa saya:
-    1. Jika saya berhasil mencapai minimal 8 rep dengan stabil, rekomendasikan saya untuk NAIK BEBAN (sebutkan perkiraan naik berapa kg) untuk sesi berikutnya.
-    2. Jika saya gagal mencapai 8 repetisi atau reps saya turun, sarankan saya untuk TETAP di beban yang sama atau perbaiki form, jangan sarankan untuk tambah rep/set.
-    Fokuskan saran HANYA pada penyesuaian beban (progressive overload). Maksimal 3 kalimat.`;
-    
-    const response = await callGeminiAPI(prompt);
+    const recentLogs = history.slice(0, 3).map(l => `${l.weight}kg x ${l.sets}x${l.reps}`).join(' -> ');
+    const response = await callGeminiAPI(`Saya baru saja melakukan ${exercise.name} dengan histori: ${recentLogs}. Target saya 2x8. Evaluasi penyesuaian beban berikutnya. Maksimal 3 kalimat.`);
     setAiProgress(response);
     setIsAiProgressLoading(false);
   };
@@ -154,14 +133,12 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!weight || !sets || !reps) return;
-
     onLog({
       exerciseId: exercise.id,
       weight: parseFloat(weight),
       sets: parseInt(sets),
       reps: parseInt(reps),
     });
-
     setSets('');
     setReps('');
     setShowSuccess(true);
@@ -173,11 +150,6 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
     setEditForm({ weight: log.weight.toString(), sets: log.sets.toString(), reps: log.reps.toString() });
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditForm({ weight: '', sets: '', reps: '' });
-  };
-
   const saveEdit = (id) => {
     if (!editForm.weight || !editForm.sets || !editForm.reps) return;
     onEditLog(id, {
@@ -187,7 +159,7 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 mb-4 transition-all hover:shadow-md">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 mb-4 transition-all">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{exercise.name}</h3>
@@ -196,82 +168,35 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
           </span>
         </div>
         <div className="flex space-x-1.5">
-          <button 
-            onClick={handleGetAlternative}
-            className="bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800 transition-colors"
-            title="Alat Penuh? Alternatif ✨"
-          >
+          <button onClick={handleGetAlternative} className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
             {isAiAltLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
           </button>
-          <button 
-            onClick={handleGetTip}
-            className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800 transition-colors"
-            title="Tips Form AI ✨"
-          >
+          <button onClick={handleGetTip} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800">
             {isAiTipLoading ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
           </button>
         </div>
       </div>
 
-      {/* AI Modals/Banners */}
-      {aiTip && (
-        <div className="mb-4 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/60 rounded-xl p-3 text-sm text-indigo-800 dark:text-indigo-200 flex items-start animate-in fade-in duration-300">
-          <Bot className="shrink-0 mr-2 mt-0.5 text-indigo-500 dark:text-indigo-400" size={16} />
-          <p className="leading-relaxed"><strong>Form Tips:</strong> {aiTip}</p>
-        </div>
-      )}
-
-      {aiAlt && (
-        <div className="mb-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/60 rounded-xl p-3 text-sm text-emerald-800 dark:text-emerald-200 flex items-start animate-in fade-in duration-300">
-          <RefreshCw className="shrink-0 mr-2 mt-0.5 text-emerald-500 dark:text-emerald-400" size={16} />
-          <p className="leading-relaxed"><strong>Alternatif:</strong> {aiAlt}</p>
-        </div>
-      )}
-      
-      {aiProgress && (
-        <div className="mb-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-3 text-sm text-amber-900 dark:text-amber-200 flex items-start animate-in fade-in duration-300 shadow-sm">
-          <TrendingUp className="shrink-0 mr-2 mt-0.5 text-amber-500 dark:text-amber-400" size={18} />
-          <p className="leading-relaxed font-medium"><strong>Target Beban Berikutnya:</strong> {aiProgress}</p>
-        </div>
-      )}
+      {aiTip && <div className="mb-4 bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-xl text-sm text-indigo-800 dark:text-indigo-200 flex animate-in fade-in"><Bot className="mr-2 mt-0.5 shrink-0" size={16} /><p>{aiTip}</p></div>}
+      {aiAlt && <div className="mb-4 bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl text-sm text-emerald-800 dark:text-emerald-200 flex animate-in fade-in"><RefreshCw className="mr-2 mt-0.5 shrink-0" size={16} /><p>{aiAlt}</p></div>}
+      {aiProgress && <div className="mb-4 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-xl text-sm text-amber-900 dark:text-amber-200 flex animate-in fade-in shadow-sm"><TrendingUp className="mr-2 mt-0.5 shrink-0" size={18} /><p>{aiProgress}</p></div>}
 
       <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 mb-4">
         <div className="flex-1 min-w-[80px]">
-          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Beban (Kg)</label>
-          <input
-            type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-slate-100"
-            placeholder="0"
-          />
+          <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Beban (Kg)</label>
+          <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="0" />
         </div>
         <div className="w-16">
-          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Set</label>
-          <input
-            type="number" value={sets} onChange={(e) => setSets(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-slate-100"
-            placeholder="2"
-          />
+          <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Set</label>
+          <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="2" />
         </div>
         <div className="w-16">
-          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Reps</label>
-          <input
-            type="number" value={reps} onChange={(e) => setReps(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-slate-100"
-            placeholder="8"
-          />
+          <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Reps</label>
+          <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="8" />
         </div>
         <div className="w-full mt-2">
-          <button
-            type="submit" disabled={!weight || !sets || !reps}
-            className={`w-full flex items-center justify-center py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              showSuccess 
-                ? 'bg-green-500 text-white' 
-                : (!weight || !sets || !reps) 
-                  ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
-            }`}
-          >
-            {showSuccess ? <><CheckCircle size={18} className="mr-2" />Tersimpan!</> : <><Plus size={18} className="mr-2" />Catat Progres</>}
+          <button type="submit" disabled={!weight || !sets || !reps} className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${showSuccess ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'}`}>
+            {showSuccess ? <div className="flex items-center justify-center"><CheckCircle size={18} className="mr-2" />Tersimpan!</div> : <div className="flex items-center justify-center"><Plus size={18} className="mr-2" />Catat Progres</div>}
           </button>
         </div>
       </form>
@@ -279,58 +204,37 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
       {history.length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
           <div className="flex justify-between items-center mb-2">
-            <button 
-              onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300">
               <History size={16} className="mr-2" /> Histori ({history.length})
               {showHistory ? <ChevronUp size={16} className="ml-1" /> : <ChevronDown size={16} className="ml-1"/>}
             </button>
-            
-            <button
-              onClick={handleGetProgressAdvice}
-              disabled={isAiProgressLoading}
-              className="flex items-center text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60 transition-colors"
-            >
-              {isAiProgressLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
-              Evaluasi Target Beban
+            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60 flex items-center">
+              {isAiProgressLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />} Evaluasi Progres AI
             </button>
           </div>
-
           {showHistory && (
             <div className="mt-3 space-y-2">
               {history.map((log) => (
                 <div key={log.id}>
                   {editingId === log.id ? (
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg text-sm border border-blue-200 dark:border-blue-800/50">
-                      <div className="flex space-x-2 mb-2">
-                        <div className="flex-1">
-                          <label className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400">Beban</label>
-                          <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="w-full bg-white dark:bg-slate-800 border border-blue-100 dark:border-blue-700 rounded px-2 py-1 mt-1 text-sm outline-none dark:text-white" />
-                        </div>
-                        <div className="w-16">
-                          <label className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400">Set</label>
-                          <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-full bg-white dark:bg-slate-800 border border-blue-100 dark:border-blue-700 rounded px-2 py-1 mt-1 text-sm outline-none dark:text-white" />
-                        </div>
-                        <div className="w-16">
-                          <label className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400">Reps</label>
-                          <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-full bg-white dark:bg-slate-800 border border-blue-100 dark:border-blue-700 rounded px-2 py-1 mt-1 text-sm outline-none dark:text-white" />
-                        </div>
-                      </div>
-                      <div className="flex justify-end space-x-2 mt-2">
-                        <button onClick={cancelEdit} className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><X size={16} /></button>
-                        <button onClick={() => saveEdit(log.id)} className="p-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded"><Check size={16} /></button>
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800/50">
+                      <div className="flex space-x-2">
+                        <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="flex-1 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
+                        <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
+                        <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
+                        <button onClick={() => saveEdit(log.id)} className="p-1.5 text-white bg-blue-600 rounded"><Check size={16} /></button>
+                        <button onClick={() => setEditingId(null)} className="p-1.5 text-slate-500 rounded"><X size={16} /></button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-lg text-sm group hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
+                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-lg text-sm group transition-colors">
                       <div>
-                        <span className="text-slate-500 dark:text-slate-400 text-xs block mb-0.5">{log.time}</span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-200">{log.weight} kg <span className="text-slate-400 dark:text-slate-500 font-normal mx-1">×</span> {log.sets} sets <span className="text-slate-400 dark:text-slate-500 font-normal mx-1">×</span> {log.reps} reps</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs block">{log.time}</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">{log.weight} kg <span className="text-slate-400">×</span> {log.sets} sets <span className="text-slate-400">×</span> {log.reps} reps</span>
                       </div>
                       <div className="flex space-x-1 opacity-80">
                         <button onClick={() => startEdit(log)} className="p-1.5 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded"><Edit2 size={16} /></button>
-                        <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 rounded"><Trash2 size={16} /></button>
+                        <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-red-500 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
                       </div>
                     </div>
                   )}
@@ -347,75 +251,75 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
 export default function App() {
   const todaySplit = getTodaySplit();
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
-  const [logs, setLogs] = useState([]);
   
-  // State untuk Theme (Dark Mode)
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Inisialisasi State dari LocalStorage
+  const [logs, setLogs] = useState(() => {
+    const saved = localStorage.getItem('gym_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [exerciseData, setExerciseData] = useState(() => {
+    const saved = localStorage.getItem('gym_exercises');
+    return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA;
+  });
 
-  // State untuk Data Latihan (agar bisa ditambah manual)
-  const [exerciseData, setExerciseData] = useState(INITIAL_EXERCISE_DATA);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('gym_dark_mode');
+    return saved === 'true';
+  });
 
-  // State untuk form Tambah Latihan Manual
+  // Simpan ke LocalStorage setiap kali ada perubahan
+  useEffect(() => {
+    localStorage.setItem('gym_logs', JSON.stringify(logs));
+  }, [logs]);
+
+  useEffect(() => {
+    localStorage.setItem('gym_exercises', JSON.stringify(exerciseData));
+  }, [exerciseData]);
+
+  useEffect(() => {
+    localStorage.setItem('gym_dark_mode', isDarkMode);
+  }, [isDarkMode]);
+
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newExerciseMuscle, setNewExerciseMuscle] = useState('');
 
-  // AI States (Summary & Nutrition)
   const [aiSummary, setAiSummary] = useState(null);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-  
   const [aiNutrition, setAiNutrition] = useState(null);
   const [isNutritionLoading, setIsNutritionLoading] = useState(false);
 
   const handleGenerateSummary = async () => {
     if (logs.length === 0) return;
     setIsSummaryLoading(true);
-    const workoutData = logs.map(l => {
-      const exerciseName = exerciseData[activeTab]?.find(e => e.id === l.exerciseId)?.name || l.exerciseId;
-      return `${exerciseName} (${l.weight}kg, ${l.sets}x${l.reps})`;
-    }).join(', ');
-    
-    const prompt = `Saya baru latihan rincian: ${workoutData}. Berikan 1 kalimat evaluasi singkat.`;
-    const response = await callGeminiAPI(prompt);
+    const workoutData = logs.map(l => `${exerciseData[activeTab]?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg, ${l.sets}x${l.reps})`).join(', ');
+    const response = await callGeminiAPI(`Saya baru latihan: ${workoutData}. Berikan evaluasi singkat.`);
     setAiSummary(response);
     setIsSummaryLoading(false);
   };
 
   const handleGenerateNutrition = async () => {
     setIsNutritionLoading(true);
-    const musclesTrained = exerciseData[activeTab].map(e => e.muscle).join(', ');
-    const prompt = `Latihan ${activeTab} otot: ${musclesTrained}. Berikan 1 rekomendasi makanan lokal Indonesia tinggi protein untuk pemulihan. Sebutkan perkiraan protein. Singkat.`;
-    const response = await callGeminiAPI(prompt);
+    const muscles = exerciseData[activeTab].map(e => e.muscle).join(', ');
+    const response = await callGeminiAPI(`Latihan ${activeTab} otot: ${muscles}. Rekomendasikan 1 makanan Indonesia tinggi protein. Singkat.`);
     setAiNutrition(response);
     setIsNutritionLoading(false);
   };
 
   const handleAddLog = (logData) => {
-    const newLog = {
-      ...logData, id: Date.now().toString(),
-      date: new Date().toLocaleDateString('id-ID'), time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-    };
+    const newLog = { ...logData, id: Date.now().toString(), date: new Date().toLocaleDateString('id-ID'), time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) };
     setLogs([newLog, ...logs]);
   };
 
-  const handleEditLog = (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
+  const handleEditLog = (id, updatedData) => setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log));
   const handleDeleteLog = (id) => { if(window.confirm("Hapus catatan ini?")) setLogs(logs.filter(log => log.id !== id)); };
 
   const handleSaveCustomExercise = (e) => {
     e.preventDefault();
     if (!newExerciseName) return;
-
-    const newExercise = {
-      id: `custom-${Date.now()}`,
-      name: newExerciseName,
-      muscle: newExerciseMuscle || 'Umum'
-    };
-
-    setExerciseData({
-      ...exerciseData,
-      [activeTab]: [...exerciseData[activeTab], newExercise]
-    });
-
+    const newExercise = { id: `custom-${Date.now()}`, name: newExerciseName, muscle: newExerciseMuscle || 'Umum' };
+    setExerciseData({ ...exerciseData, [activeTab]: [...exerciseData[activeTab], newExercise] });
     setIsAddingExercise(false);
     setNewExerciseName('');
     setNewExerciseMuscle('');
@@ -423,174 +327,63 @@ export default function App() {
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors duration-200">
-        
-        {/* Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 transition-colors">
-          <div className="max-w-2xl mx-auto px-4 py-5">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center">
-                  <Activity className="mr-2 text-blue-600 dark:text-blue-400" size={28} /> GymLogs
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center font-medium">
-                  <Calendar size={14} className="mr-1.5" /> {getHariIndonesia()} • Jadwal: <span className="ml-1 text-blue-600 dark:text-blue-400 font-bold">{todaySplit}</span>
-                </p>
-              </div>
-              
-              {/* Tombol Toggle Mode Gelap */}
-              <button 
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                title="Ganti Tema"
-              >
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors">
+        <header className="bg-white dark:bg-slate-900 border-b dark:border-slate-800 sticky top-0 z-10 transition-colors">
+          <div className="max-w-2xl mx-auto px-4 py-5 flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-black tracking-tight flex items-center"><Activity className="mr-2 text-blue-600" size={28} /> GymLogs</h1>
+              <p className="text-sm text-slate-500 mt-1 flex items-center font-medium"><Calendar size={14} className="mr-1.5" /> {getHariIndonesia()} • Jadwal: <span className="ml-1 text-blue-600 font-bold">{todaySplit}</span></p>
             </div>
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-all">{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button>
           </div>
-
-          <div className="max-w-2xl mx-auto px-4">
-            <div className="flex space-x-2 pb-4 overflow-x-auto no-scrollbar">
-              {['Push', 'Pull', 'Legs'].map((tab) => (
-                <button
-                  key={tab} onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-                    activeTab === tab 
-                      ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-md' 
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  Hari {tab}
-                </button>
-              ))}
-            </div>
+          <div className="max-w-2xl mx-auto px-4 flex space-x-2 pb-4 overflow-x-auto no-scrollbar">
+            {['Push', 'Pull', 'Legs'].map((tab) => (
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${activeTab === tab ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>Hari {tab}</button>
+            ))}
           </div>
         </header>
 
         <main className="max-w-2xl mx-auto px-4 py-6">
-          {todaySplit === 'Rest' && activeTab === 'Push' && (
-             <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50 rounded-xl p-4 mb-6 flex items-start">
-               <Info className="text-blue-500 dark:text-blue-400 mt-0.5 mr-3 shrink-0" size={20} />
-               <div>
-                 <h4 className="text-sm font-bold text-blue-900 dark:text-blue-100">Hari ini jadwal Rest (Istirahat)</h4>
-                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">Otot butuh pemulihan, tapi bebas catat jika tetap ingin workout.</p>
-               </div>
-             </div>
-          )}
-
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Latihan {activeTab}</h2>
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">
-              {exerciseData[activeTab].length} Gerakan
-            </span>
+            <h2 className="text-xl font-bold">Latihan {activeTab}</h2>
+            <span className="text-sm font-medium text-slate-500 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">{exerciseData[activeTab].length} Gerakan</span>
           </div>
 
           {logs.length > 0 && (
             <div className="mb-8 space-y-3">
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 text-white shadow-md">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-bold flex items-center text-sm">
-                    <Sparkles size={16} className="mr-2 text-yellow-300" /> Analisis Sesi AI ✨
-                  </h3>
-                  <button 
-                    onClick={handleGenerateSummary} disabled={isSummaryLoading}
-                    className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
-                  >
-                    {isSummaryLoading ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Memproses...</> : 'Beri Nilai Sesi'}
-                  </button>
+                  <h3 className="font-bold flex items-center text-sm"><Sparkles size={16} className="mr-2 text-yellow-300" /> Analisis Sesi AI</h3>
+                  <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="text-xs bg-white/20 px-3 py-1.5 rounded-lg font-medium">{isSummaryLoading ? '...' : 'Nilai Sesi'}</button>
                 </div>
-                {aiSummary ? (
-                  <p className="text-sm text-indigo-50 mt-2 leading-relaxed bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in duration-300">
-                    {aiSummary}
-                  </p>
-                ) : (
-                  <p className="text-xs text-indigo-100 mt-1">Cek performa dan dapatkan suntikan motivasi dari Pelatih AI Anda.</p>
-                )}
+                {aiSummary && <p className="text-sm text-indigo-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in">{aiSummary}</p>}
               </div>
-
               <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-4 text-white shadow-md">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-bold flex items-center text-sm">
-                    <Utensils size={16} className="mr-2 text-yellow-200" /> Saran Pemulihan ✨
-                  </h3>
-                  <button 
-                    onClick={handleGenerateNutrition} disabled={isNutritionLoading}
-                    className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center"
-                  >
-                    {isNutritionLoading ? <><Loader2 size={12} className="animate-spin mr-1.5" /> Meracik Menu...</> : 'Menu Makanan'}
-                  </button>
+                  <h3 className="font-bold flex items-center text-sm"><Utensils size={16} className="mr-2 text-yellow-200" /> Saran Pemulihan</h3>
+                  <button onClick={handleGenerateNutrition} disabled={isNutritionLoading} className="text-xs bg-white/20 px-3 py-1.5 rounded-lg font-medium">{isNutritionLoading ? '...' : 'Menu Protein'}</button>
                 </div>
-                {aiNutrition ? (
-                  <p className="text-sm text-orange-50 mt-2 leading-relaxed bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in duration-300">
-                    {aiNutrition}
-                  </p>
-                ) : (
-                  <p className="text-xs text-orange-100 mt-1">Tanya AI menu makanan lokal tinggi protein yang cocok buat ngisi bensin!</p>
-                )}
+                {aiNutrition && <p className="text-sm text-orange-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in">{aiNutrition}</p>}
               </div>
             </div>
           )}
 
           <div className="space-y-4">
-            {/* Mapping Data Latihan */}
-            {exerciseData[activeTab].map((exercise) => {
-              const exerciseLogs = logs.filter(l => l.exerciseId === exercise.id);
-              return (
-                <ExerciseCard 
-                  key={exercise.id} exercise={exercise} 
-                  onLog={handleAddLog} onEditLog={handleEditLog} onDeleteLog={handleDeleteLog}
-                  history={exerciseLogs}
-                />
-              );
-            })}
+            {exerciseData[activeTab].map((exercise) => (
+              <ExerciseCard key={exercise.id} exercise={exercise} onLog={handleAddLog} onEditLog={handleEditLog} onDeleteLog={handleDeleteLog} history={logs.filter(l => l.exerciseId === exercise.id)} />
+            ))}
 
-            {/* Form Tambah Latihan Kustom */}
             {isAddingExercise ? (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 animate-in fade-in duration-300">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100">Tambah Latihan Baru</h3>
-                  <button onClick={() => setIsAddingExercise(false)} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300">
-                    <X size={20} />
-                  </button>
-                </div>
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border dark:border-slate-700 animate-in fade-in">
+                <div className="flex justify-between mb-4"><h3 className="font-bold">Tambah Latihan</h3><button onClick={() => setIsAddingExercise(false)}><X size={20} /></button></div>
                 <form onSubmit={handleSaveCustomExercise} className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Nama Gerakan/Alat</label>
-                    <input 
-                      type="text" 
-                      value={newExerciseName} 
-                      onChange={(e) => setNewExerciseName(e.target.value)}
-                      placeholder="Contoh: Dumbbell Bench Press"
-                      className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100"
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Target Otot (Opsional)</label>
-                    <input 
-                      type="text" 
-                      value={newExerciseMuscle} 
-                      onChange={(e) => setNewExerciseMuscle(e.target.value)}
-                      placeholder="Contoh: Dada Atas"
-                      className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-slate-100"
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    disabled={!newExerciseName}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 mt-2"
-                  >
-                    Simpan ke Hari {activeTab}
-                  </button>
+                  <input type="text" value={newExerciseName} onChange={(e) => setNewExerciseName(e.target.value)} placeholder="Nama Latihan" className="w-full bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-700 rounded-lg px-3 py-2 text-sm" />
+                  <input type="text" value={newExerciseMuscle} onChange={(e) => setNewExerciseMuscle(e.target.value)} placeholder="Otot Target" className="w-full bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-700 rounded-lg px-3 py-2 text-sm" />
+                  <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg text-sm">Simpan</button>
                 </form>
               </div>
             ) : (
-              <button 
-                onClick={() => setIsAddingExercise(true)}
-                className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold rounded-2xl hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-              >
-                <PlusCircle size={20} /> Tambah Latihan Manual
-              </button>
+              <button onClick={() => setIsAddingExercise(true)} className="w-full py-4 border-2 border-dashed dark:border-slate-700 text-slate-500 font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-100 transition-all"><PlusCircle size={20} /> Tambah Manual</button>
             )}
           </div>
         </main>
