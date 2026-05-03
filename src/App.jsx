@@ -70,7 +70,8 @@ const callGeminiAPI = async (prompt) => {
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
     'gemini-pro',
-    'gemini-flash-latest:generateContent'
+    'gemini-flash-latest:generateContent',
+    'gemini-flash-latest'
   ];
 
   for (const modelName of modelsToTry) {
