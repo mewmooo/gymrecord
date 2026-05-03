@@ -45,7 +45,7 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  const apiKey = ""; // Masukkan API Key Anda di sini saat di-hosting
+  const apiKey = "AIzaSyDD-YRJiGMiHRrvMukVzOovvOBEtnjo5p0"; // Masukkan API Key Anda di sini saat di-hosting
   
   // Menggunakan model publik (gemini-1.5-flash) saat berjalan di Vercel/Localhost Anda
   const modelName = typeof window !== 'undefined' && window.__app_id 
