@@ -45,38 +45,47 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  const apiKey = "AIzaSyDD-YRJiGMiHRrvMukVzOovvOBEtnjo5p0"; // Masukkan API Key Anda di sini saat di-hosting
+  const apiKey = ""; // Masukkan API Key Anda di sini saat di-hosting
   
-  // Menggunakan model publik (gemini-1.5-flash) saat berjalan di Vercel/Localhost Anda
-  const modelName = typeof window !== 'undefined' && window.__app_id 
-    ? 'gemini-2.5-flash-preview-09-2025' 
-    : 'gemini-1.5-flash';
-    
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-  
+  // Menggabungkan instruksi sistem ke dalam prompt agar kompatibel dengan SEMUA versi model (termasuk gemini-pro 1.0)
+  const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
+
   const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    systemInstruction: { 
-      parts: [{ text: "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat." }] 
-    }
+    contents: [{ parts: [{ text: combinedPrompt }] }]
   };
 
-  for (let attempt = 0; attempt < 5; attempt++) {
+  // Daftar model fallback (Sistem akan otomatis mencari model yang tersedia untuk API Key Anda)
+  const modelsToTry = [
+    typeof window !== 'undefined' && window.__app_id ? 'gemini-2.5-flash-preview-09-2025' : null,
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash',
+    'gemini-pro' // Fallback terakhir yang 100% tersedia di semua akun
+  ].filter(Boolean);
+
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const modelName = modelsToTry[i];
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const result = await response.json();
-      return result.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada respons dari AI.";
+      
+      if (response.ok) {
+        const result = await response.json();
+        return result.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada respons dari AI.";
+      }
+      
+      // Jika error 404 (Not Found), sistem akan lanjut mencoba model berikutnya di urutan
+      console.warn(`Model ${modelName} gagal: ${response.status}`);
     } catch (error) {
-      const delay = Math.pow(2, attempt) * 1000;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      console.error(`Error koneksi pada ${modelName}:`, error);
     }
   }
-  return "Maaf, AI Coach sedang menganalisis form Anda. Coba sebentar lagi!";
+  
+  return "Maaf, AI Coach gagal merespons. Pastikan API Key valid atau coba lagi nanti.";
 };
 
 // Komponen Kartu Latihan (Exercise Card)
