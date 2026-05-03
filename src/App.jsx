@@ -66,7 +66,7 @@ const callGeminiAPI = async (prompt) => {
     'gemini-1.5-flash',
     'gemini-pro',
     'gemini-1.5-pro-latest',
-    'gemini-flash-latest',
+    
     
    
   ];
