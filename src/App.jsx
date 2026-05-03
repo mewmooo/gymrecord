@@ -30,7 +30,6 @@ const INITIAL_EXERCISE_DATA = {
   ]
 };
 
-// Menentukan jadwal hari ini
 const getTodaySplit = () => {
   const day = new Date().getDay();
   if (day === 1 || day === 4) return 'Push';
@@ -45,8 +44,13 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  // Masukkan API Key Anda di sini
-  const apiKey = "AIzaSyCpBEz6r6fEaijw3JX0G7eGCGSV6ft24nw"; 
+  // MENGAMBIL API KEY DARI ENVIRONMENT VARIABLE (VITE_GEMINI_API_KEY)
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
+  
+  if (!apiKey) {
+    console.error("API Key tidak ditemukan di environment variables!");
+    return "Maaf, konfigurasi AI belum lengkap (API Key hilang).";
+  }
   
   const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
 
@@ -54,15 +58,14 @@ const callGeminiAPI = async (prompt) => {
     contents: [{ parts: [{ text: combinedPrompt }] }]
   };
 
+  // Daftar model publik yang stabil untuk menghindari Error 404
   const modelsToTry = [
-    typeof window !== 'undefined' && window.__app_id ? 'gemini-2.5-flash-preview-09-2025' : null,
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
     'gemini-pro'
-  ].filter(Boolean);
+  ];
 
-  for (let i = 0; i < modelsToTry.length; i++) {
-    const modelName = modelsToTry[i];
+  for (const modelName of modelsToTry) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
     try {
@@ -84,7 +87,6 @@ const callGeminiAPI = async (prompt) => {
   return "Maaf, AI Coach gagal merespons. Pastikan API Key valid atau coba lagi nanti.";
 };
 
-// Komponen Kartu Latihan (Exercise Card)
 const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
   const [weight, setWeight] = useState('');
   const [sets, setSets] = useState('');
@@ -159,7 +161,7 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 mb-4 transition-all">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 mb-4 transition-all hover:shadow-md">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{exercise.name}</h3>
@@ -168,10 +170,10 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
           </span>
         </div>
         <div className="flex space-x-1.5">
-          <button onClick={handleGetAlternative} className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
+          <button onClick={handleGetAlternative} className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 p-2 rounded-lg border border-emerald-100 dark:border-emerald-800 transition-colors">
             {isAiAltLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
           </button>
-          <button onClick={handleGetTip} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800">
+          <button onClick={handleGetTip} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800 transition-colors">
             {isAiTipLoading ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
           </button>
         </div>
@@ -184,18 +186,18 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
       <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 mb-4">
         <div className="flex-1 min-w-[80px]">
           <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Beban (Kg)</label>
-          <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="0" />
+          <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0" />
         </div>
         <div className="w-16">
           <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Set</label>
-          <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="2" />
+          <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="2" />
         </div>
         <div className="w-16">
           <label className="block text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">Reps</label>
-          <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100" placeholder="8" />
+          <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="8" />
         </div>
         <div className="w-full mt-2">
-          <button type="submit" disabled={!weight || !sets || !reps} className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${showSuccess ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'}`}>
+          <button type="submit" disabled={!weight || !sets || !reps} className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-all ${showSuccess ? 'bg-green-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm disabled:opacity-50'}`}>
             {showSuccess ? <div className="flex items-center justify-center"><CheckCircle size={18} className="mr-2" />Tersimpan!</div> : <div className="flex items-center justify-center"><Plus size={18} className="mr-2" />Catat Progres</div>}
           </button>
         </div>
@@ -204,11 +206,11 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
       {history.length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
           <div className="flex justify-between items-center mb-2">
-            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300">
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors">
               <History size={16} className="mr-2" /> Histori ({history.length})
               {showHistory ? <ChevronUp size={16} className="ml-1" /> : <ChevronDown size={16} className="ml-1"/>}
             </button>
-            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60 flex items-center">
+            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60 flex items-center transition-colors">
               {isAiProgressLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />} Evaluasi Progres AI
             </button>
           </div>
@@ -219,15 +221,15 @@ const ExerciseCard = ({ exercise, onLog, history, onEditLog, onDeleteLog }) => {
                   {editingId === log.id ? (
                     <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800/50">
                       <div className="flex space-x-2">
-                        <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="flex-1 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
-                        <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
-                        <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border rounded px-2 py-1 text-sm dark:text-white" />
+                        <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm dark:text-white" />
+                        <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm dark:text-white" />
+                        <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm dark:text-white" />
                         <button onClick={() => saveEdit(log.id)} className="p-1.5 text-white bg-blue-600 rounded"><Check size={16} /></button>
-                        <button onClick={() => setEditingId(null)} className="p-1.5 text-slate-500 rounded"><X size={16} /></button>
+                        <button onClick={() => setEditingId(null)} className="p-1.5 text-slate-500 rounded hover:bg-slate-200"><X size={16} /></button>
                       </div>
                     </div>
                   ) : (
-                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-lg text-sm group transition-colors">
+                    <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-700/40 p-2.5 rounded-lg text-sm group transition-colors hover:bg-slate-100 dark:hover:bg-slate-700/60">
                       <div>
                         <span className="text-slate-500 dark:text-slate-400 text-xs block">{log.time}</span>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">{log.weight} kg <span className="text-slate-400">×</span> {log.sets} sets <span className="text-slate-400">×</span> {log.reps} reps</span>
@@ -252,7 +254,7 @@ export default function App() {
   const todaySplit = getTodaySplit();
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
   
-  // Inisialisasi State dari LocalStorage
+  // Persistensi Data melalui LocalStorage
   const [logs, setLogs] = useState(() => {
     const saved = localStorage.getItem('gym_logs');
     return saved ? JSON.parse(saved) : [];
@@ -268,7 +270,6 @@ export default function App() {
     return saved === 'true';
   });
 
-  // Simpan ke LocalStorage setiap kali ada perubahan
   useEffect(() => {
     localStorage.setItem('gym_logs', JSON.stringify(logs));
   }, [logs]);
@@ -327,25 +328,41 @@ export default function App() {
 
   return (
     <div className={isDarkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors duration-200">
         <header className="bg-white dark:bg-slate-900 border-b dark:border-slate-800 sticky top-0 z-10 transition-colors">
           <div className="max-w-2xl mx-auto px-4 py-5 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-black tracking-tight flex items-center"><Activity className="mr-2 text-blue-600" size={28} /> GymLogs</h1>
-              <p className="text-sm text-slate-500 mt-1 flex items-center font-medium"><Calendar size={14} className="mr-1.5" /> {getHariIndonesia()} • Jadwal: <span className="ml-1 text-blue-600 font-bold">{todaySplit}</span></p>
+              <h1 className="text-2xl font-black tracking-tight flex items-center text-slate-800 dark:text-white">
+                <Activity className="mr-2 text-blue-600 dark:text-blue-400" size={28} /> GymLogs
+              </h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center font-medium">
+                <Calendar size={14} className="mr-1.5" /> {getHariIndonesia()} • Jadwal: <span className="ml-1 text-blue-600 dark:text-blue-400 font-bold">{todaySplit}</span>
+              </p>
             </div>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition-all">{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button>
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)} 
+              className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-600 dark:text-slate-300 shadow-sm"
+              title="Ganti Tema"
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
           <div className="max-w-2xl mx-auto px-4 flex space-x-2 pb-4 overflow-x-auto no-scrollbar">
             {['Push', 'Pull', 'Legs'].map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${activeTab === tab ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>Hari {tab}</button>
+              <button 
+                key={tab} 
+                onClick={() => setActiveTab(tab)} 
+                className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-sm ${activeTab === tab ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}
+              >
+                Hari {tab}
+              </button>
             ))}
           </div>
         </header>
 
         <main className="max-w-2xl mx-auto px-4 py-6">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold">Latihan {activeTab}</h2>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Latihan {activeTab}</h2>
             <span className="text-sm font-medium text-slate-500 bg-slate-200 dark:bg-slate-800 px-3 py-1 rounded-full">{exerciseData[activeTab].length} Gerakan</span>
           </div>
 
@@ -354,36 +371,48 @@ export default function App() {
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 text-white shadow-md">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center text-sm"><Sparkles size={16} className="mr-2 text-yellow-300" /> Analisis Sesi AI</h3>
-                  <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="text-xs bg-white/20 px-3 py-1.5 rounded-lg font-medium">{isSummaryLoading ? '...' : 'Nilai Sesi'}</button>
+                  <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-medium transition-colors">{isSummaryLoading ? <Loader2 size={12} className="animate-spin" /> : 'Nilai Sesi'}</button>
                 </div>
-                {aiSummary && <p className="text-sm text-indigo-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in">{aiSummary}</p>}
+                {aiSummary && <p className="text-sm text-indigo-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in duration-300">{aiSummary}</p>}
               </div>
               <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-4 text-white shadow-md">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center text-sm"><Utensils size={16} className="mr-2 text-yellow-200" /> Saran Pemulihan</h3>
-                  <button onClick={handleGenerateNutrition} disabled={isNutritionLoading} className="text-xs bg-white/20 px-3 py-1.5 rounded-lg font-medium">{isNutritionLoading ? '...' : 'Menu Protein'}</button>
+                  <button onClick={handleGenerateNutrition} disabled={isNutritionLoading} className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg font-medium transition-colors">{isNutritionLoading ? <Loader2 size={12} className="animate-spin" /> : 'Menu Protein'}</button>
                 </div>
-                {aiNutrition && <p className="text-sm text-orange-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in">{aiNutrition}</p>}
+                {aiNutrition && <p className="text-sm text-orange-50 mt-2 bg-black/10 p-3 rounded-lg border border-white/10 animate-in fade-in duration-300">{aiNutrition}</p>}
               </div>
             </div>
           )}
 
           <div className="space-y-4">
             {exerciseData[activeTab].map((exercise) => (
-              <ExerciseCard key={exercise.id} exercise={exercise} onLog={handleAddLog} onEditLog={handleEditLog} onDeleteLog={handleDeleteLog} history={logs.filter(l => l.exerciseId === exercise.id)} />
+              <ExerciseCard 
+                key={exercise.id} 
+                exercise={exercise} 
+                onLog={handleAddLog} 
+                onEditLog={handleEditLog} 
+                onDeleteLog={handleDeleteLog} 
+                history={logs.filter(l => l.exerciseId === exercise.id)} 
+              />
             ))}
 
             {isAddingExercise ? (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border dark:border-slate-700 animate-in fade-in">
-                <div className="flex justify-between mb-4"><h3 className="font-bold">Tambah Latihan</h3><button onClick={() => setIsAddingExercise(false)}><X size={20} /></button></div>
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 animate-in fade-in shadow-sm">
+                <div className="flex justify-between mb-4"><h3 className="font-bold text-slate-800 dark:text-slate-100">Tambah Latihan Manual</h3><button onClick={() => setIsAddingExercise(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button></div>
                 <form onSubmit={handleSaveCustomExercise} className="space-y-3">
-                  <input type="text" value={newExerciseName} onChange={(e) => setNewExerciseName(e.target.value)} placeholder="Nama Latihan" className="w-full bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-700 rounded-lg px-3 py-2 text-sm" />
-                  <input type="text" value={newExerciseMuscle} onChange={(e) => setNewExerciseMuscle(e.target.value)} placeholder="Otot Target" className="w-full bg-slate-50 dark:bg-slate-900/50 border dark:border-slate-700 rounded-lg px-3 py-2 text-sm" />
-                  <button type="submit" className="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg text-sm">Simpan</button>
+                  <input type="text" value={newExerciseName} onChange={(e) => setNewExerciseName(e.target.value)} placeholder="Nama Latihan (misal: Dumbbell Press)" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={newExerciseMuscle} onChange={(e) => setNewExerciseMuscle(e.target.value)} placeholder="Otot Target (misal: Dada Atas)" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm dark:text-slate-100 outline-none focus:ring-2 focus:ring-blue-500" />
+                  <button type="submit" disabled={!newExerciseName} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors shadow-sm disabled:opacity-50">Simpan Ke Jadwal</button>
                 </form>
               </div>
             ) : (
-              <button onClick={() => setIsAddingExercise(true)} className="w-full py-4 border-2 border-dashed dark:border-slate-700 text-slate-500 font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-100 transition-all"><PlusCircle size={20} /> Tambah Manual</button>
+              <button 
+                onClick={() => setIsAddingExercise(true)} 
+                className="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-400 transition-all"
+              >
+                <PlusCircle size={20} /> Tambah Latihan Manual
+              </button>
             )}
           </div>
         </main>
