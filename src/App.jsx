@@ -45,7 +45,7 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  const apiKey = "AIzaSyAyMDGwgB1nRprYJh8kJ85YZajx1Gk3j1U"; // API Key di-handle oleh environment
+  const apiKey = "AIzaSyDD-YRJiGMiHRrvMukVzOovvOBEtnjo5p0"; // API Key di-handle oleh environment
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
   
   const payload = {
