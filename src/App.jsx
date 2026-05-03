@@ -47,7 +47,6 @@ const callGeminiAPI = async (prompt) => {
   // Menggunakan cara akses yang lebih aman untuk menghindari peringatan build "import.meta"
   let apiKey = "";
   try {
-    // Mengecek keberadaan environment variable secara dinamis
     const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
     apiKey = env.VITE_GEMINI_API_KEY || "";
   } catch (e) {
@@ -65,12 +64,15 @@ const callGeminiAPI = async (prompt) => {
     contents: [{ parts: [{ text: combinedPrompt }] }]
   };
 
+  // Daftar model yang telah diperbarui sesuai permintaan Anda
   const modelsToTry = [
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
     'gemini-pro',
-    'gemini-flash-latest:generateContent',
-    'gemini-flash-latest'
+    'gemini-1.5-pro-latest',
+    'gemini-1.0-pro',
+    'gemini-flash-latest',
+    'gemini-flash-latest:generateContent'
   ];
 
   for (const modelName of modelsToTry) {
