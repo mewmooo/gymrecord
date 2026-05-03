@@ -45,7 +45,7 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  const apiKey = ""; // Masukkan API Key Anda di sini saat di-hosting
+  const apiKey = "AIzaSyCpBEz6r6fEaijw3JX0G7eGCGSV6ft24nw"; // Masukkan API Key Anda di sini saat di-hosting
   
   // Menggabungkan instruksi sistem ke dalam prompt agar kompatibel dengan SEMUA versi model (termasuk gemini-pro 1.0)
   const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
