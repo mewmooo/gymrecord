@@ -45,11 +45,18 @@ const getHariIndonesia = () => {
 
 const callGeminiAPI = async (prompt) => {
   // MENGAMBIL API KEY DARI ENVIRONMENT VARIABLE (VITE_GEMINI_API_KEY)
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY; 
+  // Menambahkan pengecekan agar tidak error di lingkungan yang tidak mendukung import.meta secara langsung
+  let apiKey = "";
+  try {
+    apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  } catch (e) {
+    // Fallback jika import.meta tidak tersedia (misal di lingkungan non-Vite atau preview tertentu)
+    apiKey = "";
+  }
   
   if (!apiKey) {
     console.error("API Key tidak ditemukan di environment variables!");
-    return "Maaf, konfigurasi AI belum lengkap (API Key hilang).";
+    return "Maaf, konfigurasi AI belum lengkap (API Key hilang). Pastikan VITE_GEMINI_API_KEY sudah diatur.";
   }
   
   const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
