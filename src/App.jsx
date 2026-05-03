@@ -44,19 +44,19 @@ const getHariIndonesia = () => {
 };
 
 const callGeminiAPI = async (prompt) => {
-  // MENGAMBIL API KEY DARI ENVIRONMENT VARIABLE (VITE_GEMINI_API_KEY)
-  // Menambahkan pengecekan agar tidak error di lingkungan yang tidak mendukung import.meta secara langsung
+  // Menggunakan cara akses yang lebih aman untuk menghindari peringatan build "import.meta"
   let apiKey = "";
   try {
-    apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    // Mengecek keberadaan environment variable secara dinamis
+    const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+    apiKey = env.VITE_GEMINI_API_KEY || "";
   } catch (e) {
-    // Fallback jika import.meta tidak tersedia (misal di lingkungan non-Vite atau preview tertentu)
     apiKey = "";
   }
   
   if (!apiKey) {
     console.error("API Key tidak ditemukan di environment variables!");
-    return "Maaf, konfigurasi AI belum lengkap (API Key hilang). Pastikan VITE_GEMINI_API_KEY sudah diatur.";
+    return "Maaf, konfigurasi AI belum lengkap (API Key hilang). Pastikan VITE_GEMINI_API_KEY sudah diatur di dashboard hosting.";
   }
   
   const combinedPrompt = "Anda adalah pelatih gym dan ahli biomekanik yang suportif. Jawab dengan bahasa Indonesia yang jelas, asik, memotivasi, dan logis. Berikan instruksi spesifik (angka beban jika memungkinkan). Maksimal 3 kalimat.\n\nBerikut pesannya:\n" + prompt;
@@ -65,7 +65,6 @@ const callGeminiAPI = async (prompt) => {
     contents: [{ parts: [{ text: combinedPrompt }] }]
   };
 
-  // Daftar model publik yang stabil untuk menghindari Error 404
   const modelsToTry = [
     'gemini-1.5-flash-latest',
     'gemini-1.5-flash',
