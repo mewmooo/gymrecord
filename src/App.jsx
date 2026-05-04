@@ -3,10 +3,10 @@ import {
   Dumbbell, Calendar, History, Plus, ChevronDown, ChevronUp, 
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
-  PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight
+  PlayCircle, Save, Zap, Skull, Scale, ChevronRight
 } from 'lucide-react';
 
-// Fungsi Ekstrak ID YouTube
+// Fungsi Ekstrak ID YouTube (tetap dipertahankan untuk kompatibilitas data lama)
 const getYouTubeId = (url) => {
   if (!url) return null;
   if (url.length === 11 && !url.includes('/')) return url; 
@@ -70,7 +70,7 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   
   const combinedPrompt = isRaw 
     ? prompt 
-    : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-4 kalimat. Analisis data secara harfiah.\n\n" + prompt;
+    : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-5 kalimat. Analisis data secara harfiah.\n\n" + prompt;
 
   const modelsToTry = [
     'gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro',
@@ -94,10 +94,10 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
       console.error(`Error pada model ${modelName}:`, error);
     }
   }
-  return "Maaf, AI Coach gagal merespons. Cek koneksi atau API Key.";
+  return null; // Return null if all fail so we can handle it gracefully
 };
 
-const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, onUpdateExerciseVideo, activeTab }) => {
+const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, activeTab }) => {
   const [weight, setWeight] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
@@ -114,48 +114,41 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [isAiAltLoading, setIsAiAltLoading] = useState(false);
   const [aiProgress, setAiProgress] = useState(null);
   const [isAiProgressLoading, setIsAiProgressLoading] = useState(false);
-  const [isAIVideoLoading, setIsAIVideoLoading] = useState(false);
 
   // Edit Exercise State
   const [isEditingEx, setIsEditingEx] = useState(false);
-  const [exEditForm, setExEditForm] = useState({ name: exercise.name, muscle: exercise.muscle });
+  const [exEditForm, setExEditForm] = useState({ 
+    name: exercise.name, 
+    muscle: exercise.muscle,
+    videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : ''
+  });
 
   // Handlers
   const handleGetTip = async () => {
     if (aiTip) { setAiTip(null); return; }
-    setShowVideo(false); setIsAiTipLoading(true);
+    setShowVideo(false);
+    setIsAiTipLoading(true);
     const response = await callGeminiAPI(`Berikan satu tips biomekanik singkat terkait postur (form) dan mind-muscle connection untuk memaksimalkan gerakan ${exercise.name}.`);
-    setAiTip(response); setIsAiTipLoading(false);
+    setAiTip(response || "Gagal menghubungi AI."); setIsAiTipLoading(false);
   };
 
   const handleGetAlternative = async () => {
     if (aiAlt) { setAiAlt(null); return; }
-    setShowVideo(false); setIsAiAltLoading(true);
-    const response = await callGeminiAPI(`Berikan 1 alternatif gerakan mesin/dumbbell/cable terbaik yang identik dengan ${exercise.name}. Sebutkan alasannya singkat.`);
-    setAiAlt(response); setIsAiAltLoading(false);
+    setShowVideo(false);
+    setIsAiAltLoading(true);
+    const response = await callGeminiAPI(`Berikan 1 alternatif gerakan mesin/dumbbell/cable terbaik yang identik dengan ${exercise.name}. Sebutkan alasannya singkat, DAN jelaskan langkah-langkah cara melakukan gerakan alternatif tersebut secara ringkas.`);
+    setAiAlt(response || "Gagal menghubungi AI."); setIsAiAltLoading(false);
   };
 
   const handleGetProgressAdvice = async () => {
     if (aiProgress) { setAiProgress(null); return; }
+    setShowVideo(false);
     setIsAiProgressLoading(true);
     const chronologicalHistory = [...history].slice(0, 4).reverse();
     const recentTrend = chronologicalHistory.map((l, idx) => `Sesi ${idx+1}: ${l.weight}kg (${l.sets}x${l.reps})`).join(' ➔ ');
     const prompt = `Histori (terlama ➔ terbaru) ${exercise.name}:\n[ ${recentTrend} ]\n\nEvaluasi tren beban. Jika turun, beri semangat. Jika naik, katakan naik. Berikan saran beban/rep untuk sesi berikutnya (progressive overload).`;
     const response = await callGeminiAPI(prompt);
-    setAiProgress(response); setIsAiProgressLoading(false);
-  };
-
-  const handleToggleVideo = async () => {
-    if (showVideo) { setShowVideo(false); return; }
-    setAiTip(null); setAiAlt(null); setShowVideo(true);
-    if (!exercise.videoId) {
-      setIsAIVideoLoading(true);
-      const response = await callGeminiAPI(`Cari video tutorial gym "${exercise.name}". Kembalikan HANYA 11 karakter ID YouTube-nya (cth: dQw4w9WgXcQ). TANPA teks lain.`, true);
-      const match = response.match(/[a-zA-Z0-9_-]{11}/);
-      if (match) onUpdateExerciseVideo(activeTab, exercise.id, match[0]);
-      else { alert("AI gagal menemukan video tutorial. Silakan edit link manual."); setShowVideo(false); }
-      setIsAIVideoLoading(false);
-    }
+    setAiProgress(response || "Gagal menghubungi AI."); setIsAiProgressLoading(false);
   };
 
   const handleSubmit = (e) => {
@@ -172,23 +165,28 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
     onEditLog(id, { weight: parseFloat(editForm.weight), sets: parseInt(editForm.sets), reps: parseInt(editForm.reps) });
     setEditingId(null);
   };
+  
   const handleSaveExEdit = () => {
     if (!exEditForm.name) return;
-    onEditExercise(activeTab, exercise.id, exEditForm.name, exEditForm.muscle, exercise.videoId);
+    const extractedVideoId = getYouTubeId(exEditForm.videoUrl);
+    onEditExercise(activeTab, exercise.id, exEditForm.name, exEditForm.muscle, extractedVideoId);
     setIsEditingEx(false);
   };
 
   return (
-    <div className="group bg-white dark:bg-[#0f1117] rounded-[24px] p-5 sm:p-7 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 dark:shadow-none border border-gray-100 dark:border-gray-800/80 mb-6 transition-all duration-300">
+    <div className="group bg-white dark:bg-[#0f1117] rounded-[24px] p-5 sm:p-7 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 dark:shadow-none border border-gray-100 dark:border-gray-800/80 mb-6 transition-all duration-300 relative overflow-hidden">
       
+      {/* Subtle Gradient Accent Line at the top of card */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500/0 via-fuchsia-500/20 to-violet-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6 mb-6">
         <div className="flex-1 w-full">
           {isEditingEx ? (
             <div className="space-y-3 mb-2 animate-in fade-in">
-              {/* Gunakan text-[16px] agar iOS tidak auto-zoom */}
               <input type="text" value={exEditForm.name} onChange={e => setExEditForm({...exEditForm, name: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-sm font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Nama Latihan" />
               <input type="text" value={exEditForm.muscle} onChange={e => setExEditForm({...exEditForm, muscle: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-xs font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Target Otot" />
+              <input type="text" value={exEditForm.videoUrl} onChange={e => setExEditForm({...exEditForm, videoUrl: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-xs font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Link YouTube (Opsional)" />
               <div className="flex space-x-2 pt-2">
                 <button onClick={handleSaveExEdit} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center active:scale-95 transition-all"><Save size={14} className="mr-2"/> Simpan</button>
                 <button onClick={() => setIsEditingEx(false)} className="px-5 py-2.5 bg-gray-100 dark:bg-[#1a1d27] hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl active:scale-95 transition-all">Batal</button>
@@ -199,7 +197,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
               <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
                 <h3 className="text-[18px] sm:text-[20px] font-black text-gray-900 dark:text-white tracking-tight leading-tight">{exercise.name}</h3>
                 <div className="flex space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 mt-2 sm:mt-0">
-                  <button onClick={() => setIsEditingEx(true)} className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"><Edit2 size={14} /></button>
+                  <button onClick={() => setIsEditingEx(true)} className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Gerakan & Video"><Edit2 size={14} /></button>
                   <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>
                 </div>
               </div>
@@ -213,7 +211,20 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
         {/* Action Buttons: Berbaris ke kanan agar rapi di HP */}
         <div className="flex space-x-2 shrink-0 self-end sm:self-start w-full sm:w-auto justify-end">
-          <button onClick={handleToggleVideo} className={`p-3 rounded-2xl transition-all active:scale-95 border flex items-center justify-center ${showVideo ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/25' : 'bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} title="Tutorial Video">
+          <button 
+            onClick={(e) => {
+              if (exercise.videoId) {
+                e.preventDefault();
+                setShowVideo(!showVideo);
+                setAiTip(null);
+                setAiAlt(null);
+              } else {
+                window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`, '_blank');
+              }
+            }}
+            className={`p-3 rounded-2xl transition-all active:scale-95 border flex items-center justify-center ${showVideo ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/25' : 'bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} 
+            title={exercise.videoId ? "Putar Video Tutorial" : "Cari Tutorial di YouTube"}
+          >
             <PlayCircle size={18} className={showVideo ? "animate-pulse" : ""} />
           </button>
           <button onClick={handleGetAlternative} className="p-3 rounded-2xl bg-white dark:bg-[#1a1d27] text-gray-500 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-800 transition-all active:scale-95 flex items-center justify-center group-hover:border-gray-300 dark:group-hover:border-gray-700">
@@ -227,22 +238,9 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
       {/* Embedded Elements (Video / AI Responses) */}
       <div className="space-y-4 mb-6 empty:hidden">
-        {showVideo && (
+        {showVideo && exercise.videoId && (
           <div className="rounded-2xl overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-2xl relative aspect-video animate-in zoom-in-95 duration-300">
-            {isAIVideoLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 backdrop-blur-sm z-10 p-4">
-                <Loader2 size={40} className="text-rose-500 animate-spin mb-4" />
-                <p className="text-sm font-bold text-white tracking-wide text-center">AI Scanning YouTube...</p>
-                <p className="text-xs text-gray-400 mt-2 text-center">Mencari biomekanik tutorial terbaik.</p>
-              </div>
-            ) : exercise.videoId ? (
-              <iframe className="absolute inset-0 w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0&modestbranding=1`} title="Tutorial" allowFullScreen></iframe>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-                <Video size={36} className="text-gray-400 mb-3" />
-                <p className="text-sm font-bold text-gray-600 dark:text-gray-300 text-center">Video tidak ditemukan</p>
-              </div>
-            )}
+            <iframe className="absolute inset-0 w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0&modestbranding=1`} title="Tutorial" allowFullScreen></iframe>
           </div>
         )}
 
@@ -427,8 +425,10 @@ export default function App() {
     setIsAddingExercise(false); setNewExercise({ name: '', muscle: '' });
   };
   const handleDeleteExercise = (tab, id) => { if(window.confirm("Hapus master gerakan ini?")) setExerciseData(prev => ({ ...prev, [tab]: prev[tab].filter(ex => ex.id !== id) })); };
-  const handleEditExercise = (tab, id, newName, newMuscle, newVideoId) => { setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, videoId: newVideoId } : ex) })); };
-  const handleUpdateExerciseVideo = (tab, id, videoId) => { setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, videoId } : ex) })); };
+  
+  const handleEditExercise = (tab, id, newName, newMuscle, newVideoId) => { 
+    setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, videoId: newVideoId } : ex) })); 
+  };
 
   return (
     // pb-[env(safe-area-inset-bottom)] sangat krusial untuk iPhone x dan keatas (notch/home indicator padding)
@@ -557,7 +557,7 @@ export default function App() {
               <ExerciseCard 
                 key={ex.id} exercise={ex} activeTab={activeTab}
                 onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
-                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} onUpdateExerciseVideo={handleUpdateExerciseVideo}
+                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise}
                 history={logs.filter(l => l.exerciseId === ex.id)} 
               />
             ))}
