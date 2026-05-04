@@ -3,40 +3,31 @@ import {
   Dumbbell, Calendar, History, Plus, ChevronDown, ChevronUp, 
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
-  PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight
+  PlayCircle, Save, Zap, Skull, Scale, ChevronRight
 } from 'lucide-react';
 
-// Fungsi Ekstrak ID YouTube
-const getYouTubeId = (url) => {
-  if (!url) return null;
-  if (url.length === 11 && !url.includes('/')) return url; 
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
-};
-
-// Data Master (Sudah diisi dengan ID Video Tutorial)
+// Data Master (Disederhanakan tanpa videoId karena langsung dialihkan ke pencarian YouTube)
 const INITIAL_EXERCISE_DATA = {
   Push: [
-    { id: 'p1', name: 'Chest Press (Smith Machine)', muscle: 'Dada', videoId: '0GjpPFOx1uQ' },
-    { id: 'p2', name: 'Chest Fly (Machine)', muscle: 'Dada', videoId: 'eGjt4jcEA_E' },
-    { id: 'p3', name: 'Shoulder Press', muscle: 'Bahu Depan', videoId: 'WvLMauqrnK8' },
-    { id: 'p4', name: 'Lateral Raise / Bahu Samping (Cable)', muscle: 'Bahu Samping', videoId: 'WJm9OqN_gjc' },
-    { id: 'p5', name: 'Rear Delt Fly (Machine)', muscle: 'Bahu Belakang', videoId: 'YbX7Wd8jQ-Q' },
-    { id: 'p6', name: 'Tricep Pushdown (Cable)', muscle: 'Trisep', videoId: '2-LAMcpzODU' },
+    { id: 'p1', name: 'Chest Press (Smith Machine)', muscle: 'Dada' },
+    { id: 'p2', name: 'Chest Fly (Machine)', muscle: 'Dada' },
+    { id: 'p3', name: 'Shoulder Press', muscle: 'Bahu Depan' },
+    { id: 'p4', name: 'Lateral Raise / Bahu Samping (Cable)', muscle: 'Bahu Samping' },
+    { id: 'p5', name: 'Rear Delt Fly (Machine)', muscle: 'Bahu Belakang' },
+    { id: 'p6', name: 'Tricep Pushdown (Cable)', muscle: 'Trisep' },
   ],
   Pull: [
-    { id: 'pu1', name: 'Lat Pulldown', muscle: 'Punggung (Lats)', videoId: 'CAwf7n6Luuc' },
-    { id: 'pu2', name: 'Rowing', muscle: 'Punggung Tengah', videoId: 'GZbfZ033f74' },
-    { id: 'pu3', name: 'Bicep Curl (Cable)', muscle: 'Bisep', videoId: 'in7PaeYIYfw' },
-    { id: 'pu4', name: 'Trapezius (Shrugs / Upright Row)', muscle: 'Trapesius', videoId: 'cJRVVxmytaM' },
+    { id: 'pu1', name: 'Lat Pulldown', muscle: 'Punggung (Lats)' },
+    { id: 'pu2', name: 'Rowing', muscle: 'Punggung Tengah' },
+    { id: 'pu3', name: 'Bicep Curl (Cable)', muscle: 'Bisep' },
+    { id: 'pu4', name: 'Trapezius (Shrugs / Upright Row)', muscle: 'Trapesius' },
   ],
   Legs: [
-    { id: 'l1', name: 'Hack Squat (Machine)', muscle: 'Paha Depan & Bokong', videoId: '0tn5K9NlCfo' },
-    { id: 'l2', name: 'Leg Press (Machine)', muscle: 'Paha Depan', videoId: 'IZxyjW7OSvc' },
-    { id: 'l3', name: 'Leg Extension (Machine)', muscle: 'Paha Depan Isolasi', videoId: 'YyvSfVjQeL0' },
-    { id: 'l4', name: 'Leg Curl (Machine)', muscle: 'Paha Belakang', videoId: 'F488k67BTNo' },
-    { id: 'l5', name: 'Calf Raise (Machine)', muscle: 'Betis', videoId: '-M4-G8p8fmc' },
+    { id: 'l1', name: 'Hack Squat (Machine)', muscle: 'Paha Depan & Bokong' },
+    { id: 'l2', name: 'Leg Press (Machine)', muscle: 'Paha Depan' },
+    { id: 'l3', name: 'Leg Extension (Machine)', muscle: 'Paha Depan Isolasi' },
+    { id: 'l4', name: 'Leg Curl (Machine)', muscle: 'Paha Belakang' },
+    { id: 'l5', name: 'Calf Raise (Machine)', muscle: 'Betis' },
   ]
 };
 
@@ -70,7 +61,7 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   
   const combinedPrompt = isRaw 
     ? prompt 
-    : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-4 kalimat. Analisis data secara harfiah.\n\n" + prompt;
+    : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-5 kalimat. Analisis data secara harfiah.\n\n" + prompt;
 
   const modelsToTry = [
     'gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro',
@@ -97,7 +88,7 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   return null; // Return null if all fail so we can handle it gracefully
 };
 
-const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, onUpdateExerciseVideo, activeTab }) => {
+const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, activeTab }) => {
   const [weight, setWeight] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
@@ -106,15 +97,13 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ weight: '', sets: '', reps: '' });
 
-  // AI & Video States
-  const [showVideo, setShowVideo] = useState(false);
+  // AI States
   const [aiTip, setAiTip] = useState(null);
   const [isAiTipLoading, setIsAiTipLoading] = useState(false);
   const [aiAlt, setAiAlt] = useState(null);
   const [isAiAltLoading, setIsAiAltLoading] = useState(false);
   const [aiProgress, setAiProgress] = useState(null);
   const [isAiProgressLoading, setIsAiProgressLoading] = useState(false);
-  const [isAIVideoLoading, setIsAIVideoLoading] = useState(false);
 
   // Edit Exercise State
   const [isEditingEx, setIsEditingEx] = useState(false);
@@ -123,15 +112,15 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   // Handlers
   const handleGetTip = async () => {
     if (aiTip) { setAiTip(null); return; }
-    setShowVideo(false); setIsAiTipLoading(true);
+    setIsAiTipLoading(true);
     const response = await callGeminiAPI(`Berikan satu tips biomekanik singkat terkait postur (form) dan mind-muscle connection untuk memaksimalkan gerakan ${exercise.name}.`);
     setAiTip(response || "Gagal menghubungi AI."); setIsAiTipLoading(false);
   };
 
   const handleGetAlternative = async () => {
     if (aiAlt) { setAiAlt(null); return; }
-    setShowVideo(false); setIsAiAltLoading(true);
-    const response = await callGeminiAPI(`Berikan 1 alternatif gerakan mesin/dumbbell/cable terbaik yang identik dengan ${exercise.name}. Sebutkan alasannya singkat.`);
+    setIsAiAltLoading(true);
+    const response = await callGeminiAPI(`Berikan 1 alternatif gerakan mesin/dumbbell/cable terbaik yang identik dengan ${exercise.name}. Sebutkan alasannya singkat, DAN jelaskan langkah-langkah cara melakukan gerakan alternatif tersebut secara ringkas.`);
     setAiAlt(response || "Gagal menghubungi AI."); setIsAiAltLoading(false);
   };
 
@@ -143,25 +132,6 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
     const prompt = `Histori (terlama ➔ terbaru) ${exercise.name}:\n[ ${recentTrend} ]\n\nEvaluasi tren beban. Jika turun, beri semangat. Jika naik, katakan naik. Berikan saran beban/rep untuk sesi berikutnya (progressive overload).`;
     const response = await callGeminiAPI(prompt);
     setAiProgress(response || "Gagal menghubungi AI."); setIsAiProgressLoading(false);
-  };
-
-  const handleToggleVideo = async () => {
-    if (showVideo) { setShowVideo(false); return; }
-    setAiTip(null); setAiAlt(null); setShowVideo(true);
-    
-    // Jika ID Video belum ada, fetch pakai AI
-    if (!exercise.videoId) {
-      setIsAIVideoLoading(true);
-      const prompt = `Carikan 1 ID video YouTube (11 karakter) yang merupakan tutorial cara melakukan gerakan gym "${exercise.name}". Berikan HANYA 11 karakter ID-nya saja, tanpa spasi, tanpa teks penjelasan apapun.`;
-      const response = await callGeminiAPI(prompt, true);
-      
-      const match = response ? response.match(/[a-zA-Z0-9_-]{11}/) : null;
-      if (match) {
-        onUpdateExerciseVideo(activeTab, exercise.id, match[0]);
-      }
-      // Jika AI gagal (match = null), UI akan otomatis menampilkan state "Video tidak ditemukan"
-      setIsAIVideoLoading(false);
-    }
   };
 
   const handleSubmit = (e) => {
@@ -180,7 +150,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   };
   const handleSaveExEdit = () => {
     if (!exEditForm.name) return;
-    onEditExercise(activeTab, exercise.id, exEditForm.name, exEditForm.muscle, exercise.videoId);
+    onEditExercise(activeTab, exercise.id, exEditForm.name, exEditForm.muscle);
     setIsEditingEx(false);
   };
 
@@ -221,9 +191,15 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
         {/* Action Buttons */}
         <div className="flex space-x-2 shrink-0">
-          <button onClick={handleToggleVideo} className={`p-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center ${showVideo ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20'}`} title="Tutorial Video">
-            <PlayCircle size={20} className={showVideo ? "animate-pulse" : ""} />
-          </button>
+          <a 
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-500/20" 
+            title="Cari Video Tutorial di YouTube"
+          >
+            <PlayCircle size={20} />
+          </a>
           <button onClick={handleGetAlternative} className={`p-3.5 rounded-2xl transition-all active:scale-95 flex items-center justify-center ${aiAlt ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20'}`}>
             {isAiAltLoading ? <Loader2 size={20} className="animate-spin" /> : <RefreshCw size={20} />}
           </button>
@@ -233,38 +209,8 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         </div>
       </div>
 
-      {/* Embedded Elements (Video / AI Responses) */}
+      {/* AI Responses */}
       <div className="space-y-4 mb-6 empty:hidden">
-        {showVideo && (
-          <div className="rounded-[20px] overflow-hidden bg-[#0a0a0a] border border-gray-200 dark:border-gray-800 shadow-2xl relative aspect-video animate-in zoom-in-95 duration-300 group/video">
-            {isAIVideoLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 backdrop-blur-md z-10">
-                <Loader2 size={44} className="text-rose-500 animate-spin mb-4" />
-                <p className="text-sm font-black text-white tracking-widest uppercase">AI Memilih Video...</p>
-                <p className="text-xs text-gray-400 mt-2 font-medium">Mencari referensi terbaik di YouTube.</p>
-              </div>
-            ) : exercise.videoId ? (
-              <>
-                <iframe className="absolute inset-0 w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0&modestbranding=1`} title="Tutorial" allowFullScreen></iframe>
-                {/* Tombol darurat Buka di YouTube jika Iframe error */}
-                <div className="absolute bottom-3 right-3 opacity-0 group-hover/video:opacity-100 transition-opacity">
-                  <a href={`https://youtu.be/${exercise.videoId}`} target="_blank" rel="noopener noreferrer" className="bg-black/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl border border-white/10 hover:bg-black transition-colors flex items-center shadow-lg">
-                    Buka di App YouTube <ChevronRight size={14} className="ml-1"/>
-                  </a>
-                </div>
-              </>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 dark:bg-[#11131a]">
-                <Video size={40} className="text-gray-300 dark:text-gray-700 mb-3" />
-                <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Video AI Tidak Ditemukan</p>
-                <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`} target="_blank" rel="noopener noreferrer" className="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-500/20 active:scale-95">
-                  Cari Manual di YouTube
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
         {aiTip && (
           <div className="bg-gradient-to-br from-violet-50 to-white dark:from-violet-500/10 dark:to-transparent p-5 rounded-2xl border border-violet-100 dark:border-violet-500/20 animate-in slide-in-from-top-2 flex items-start shadow-sm">
             <div className="bg-violet-100 dark:bg-violet-500/20 p-2.5 rounded-xl mr-4 shrink-0 shadow-inner"><Sparkles size={18} className="text-violet-600 dark:text-violet-400" /></div>
@@ -370,22 +316,21 @@ export default function App() {
   const todaySplit = getTodaySplit();
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
   
-  // MENGUBAH NAMA KUNCI LOCAL STORAGE (v8) UNTUK MERESET CACHE LAMA
-  const [logs, setLogs] = useState(() => { const saved = localStorage.getItem('gym_logs_v8'); return saved ? JSON.parse(saved) : []; });
-  const [exerciseData, setExerciseData] = useState(() => { const saved = localStorage.getItem('gym_exercises_v8'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; });
-  const [isDarkMode, setIsDarkMode] = useState(() => { const saved = localStorage.getItem('gym_dark_v8'); return saved === 'true'; });
+  // RESET CACHE LAMA (v9)
+  const [logs, setLogs] = useState(() => { const saved = localStorage.getItem('gym_logs_v9'); return saved ? JSON.parse(saved) : []; });
+  const [exerciseData, setExerciseData] = useState(() => { const saved = localStorage.getItem('gym_exercises_v9'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; });
+  const [isDarkMode, setIsDarkMode] = useState(() => { const saved = localStorage.getItem('gym_dark_v9'); return saved === 'true'; });
 
-  useEffect(() => { localStorage.setItem('gym_logs_v8', JSON.stringify(logs)); }, [logs]);
-  useEffect(() => { localStorage.setItem('gym_exercises_v8', JSON.stringify(exerciseData)); }, [exerciseData]);
+  useEffect(() => { localStorage.setItem('gym_logs_v9', JSON.stringify(logs)); }, [logs]);
+  useEffect(() => { localStorage.setItem('gym_exercises_v9', JSON.stringify(exerciseData)); }, [exerciseData]);
   useEffect(() => {
-    localStorage.setItem('gym_dark_v8', isDarkMode);
+    localStorage.setItem('gym_dark_v9', isDarkMode);
     if(isDarkMode) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle: '' });
-  const [isSavingCustom, setIsSavingCustom] = useState(false); // State baru saat memuat AI
 
   // AI States
   const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
@@ -444,38 +389,20 @@ export default function App() {
   const handleSaveCustom = async (e) => {
     e.preventDefault(); 
     if (!newExercise.name) return;
-    
-    setIsSavingCustom(true); // Memutar loading spinner saat AI mencari video
-
-    // PRE-FETCH VIDEO DENGAN AI SAAT MENYIMPAN
-    let fetchedVideoId = null;
-    try {
-      const prompt = `Carikan 1 ID video YouTube (11 karakter) tutorial form gym yang benar untuk gerakan "${newExercise.name}". Berikan HANYA 11 karakter ID-nya saja (contoh: dQw4w9WgXcQ), tanpa teks penjelasan apapun.`;
-      const response = await callGeminiAPI(prompt, true);
-      if (response) {
-        const match = response.match(/[a-zA-Z0-9_-]{11}/);
-        if (match) fetchedVideoId = match[0];
-      }
-    } catch (err) {
-      console.error("AI Video Fetch Error:", err);
-    }
 
     const item = { 
       id: `c-${Date.now()}`, 
       name: newExercise.name, 
-      muscle: newExercise.muscle || 'Umum', 
-      videoId: fetchedVideoId 
+      muscle: newExercise.muscle || 'Umum'
     };
     
     setExerciseData(prev => ({ ...prev, [activeTab]: [...prev[activeTab], item] }));
     setIsAddingExercise(false); 
     setNewExercise({ name: '', muscle: '' });
-    setIsSavingCustom(false);
   };
 
   const handleDeleteExercise = (tab, id) => { if(window.confirm("Hapus master gerakan ini?")) setExerciseData(prev => ({ ...prev, [tab]: prev[tab].filter(ex => ex.id !== id) })); };
-  const handleEditExercise = (tab, id, newName, newMuscle, newVideoId) => { setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, videoId: newVideoId } : ex) })); };
-  const handleUpdateExerciseVideo = (tab, id, videoId) => { setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, videoId } : ex) })); };
+  const handleEditExercise = (tab, id, newName, newMuscle) => { setExerciseData(prev => ({ ...prev, [tab]: prev[tab].map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle } : ex) })); };
 
   return (
     <div className={`min-h-screen font-sans antialiased selection:bg-violet-500/30 ${isDarkMode ? 'dark bg-[#050505] text-white' : 'bg-[#FAFAFA] text-gray-900'} transition-colors duration-500`}>
@@ -560,16 +487,16 @@ export default function App() {
 
           {/* AI Feature Suite - Pro Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="bg-white dark:bg-[#0f1117] hover:border-orange-500/50 border border-gray-100 dark:border-gray-800/80 rounded-[28px] p-6 transition-all flex flex-col items-center justify-center group active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-orange-500/10">
-              <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-4 text-orange-500 group-hover:scale-110 transition-transform">
-                {isWarmupLoading ? <Loader2 size={26} className="animate-spin" /> : <Flame size={26} />}
+            <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="bg-white/50 dark:bg-[#0f1117]/50 backdrop-blur-md hover:bg-white dark:hover:bg-[#1a1d27] border border-gray-200/50 dark:border-gray-800/80 rounded-[32px] p-6 sm:p-8 transition-all flex flex-col items-center justify-center group active:scale-[0.98] shadow-lg shadow-gray-200/20 dark:shadow-none">
+              <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-5 text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform duration-300">
+                {isWarmupLoading ? <Loader2 size={28} className="animate-spin" /> : <Flame size={28} />}
               </div>
               <span className="text-[11px] font-black uppercase tracking-widest text-gray-900 dark:text-white text-center">Pemanasan<br/><span className="text-gray-400 font-bold">Dinamis AI</span></span>
             </button>
             
-            <button onClick={handleCheckImbalance} disabled={isImbalanceLoading} className="bg-white dark:bg-[#0f1117] hover:border-cyan-500/50 border border-gray-100 dark:border-gray-800/80 rounded-[28px] p-6 transition-all flex flex-col items-center justify-center group active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-cyan-500/10">
-              <div className="w-14 h-14 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center mb-4 text-cyan-500 group-hover:scale-110 transition-transform">
-                {isImbalanceLoading ? <Loader2 size={26} className="animate-spin" /> : <Scale size={26} />}
+            <button onClick={handleCheckImbalance} disabled={isImbalanceLoading} className="bg-white/50 dark:bg-[#0f1117]/50 backdrop-blur-md hover:bg-white dark:hover:bg-[#1a1d27] border border-gray-200/50 dark:border-gray-800/80 rounded-[32px] p-6 sm:p-8 transition-all flex flex-col items-center justify-center group active:scale-[0.98] shadow-lg shadow-gray-200/20 dark:shadow-none">
+              <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center mb-5 text-white shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform duration-300">
+                {isImbalanceLoading ? <Loader2 size={28} className="animate-spin" /> : <Scale size={28} />}
               </div>
               <span className="text-[11px] font-black uppercase tracking-widest text-gray-900 dark:text-white text-center">Deteksi<br/><span className="text-gray-400 font-bold">Postur Otot</span></span>
             </button>
@@ -577,34 +504,34 @@ export default function App() {
 
           {/* Overlays for AI Tools */}
           {aiWarmup && (
-            <div className="bg-gradient-to-br from-orange-50 to-white dark:from-[#1f130a] dark:to-[#0f1117] border border-orange-200/50 dark:border-orange-900/30 p-6 rounded-[28px] animate-in slide-in-from-top-4 relative shadow-2xl shadow-orange-500/10">
-              <button onClick={() => setAiWarmup(null)} className="absolute top-5 right-5 p-2 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={16} /></button>
-              <span className="font-black text-sm uppercase tracking-widest mb-4 flex items-center text-orange-600 dark:text-orange-500"><Flame size={18} className="mr-2.5"/> Pemanasan Hari Ini</span>
+            <div className="bg-white dark:bg-[#0f1117] border border-orange-100 dark:border-orange-900/30 p-6 sm:p-8 rounded-[32px] animate-in slide-in-from-top-4 relative shadow-2xl shadow-orange-500/10">
+              <button onClick={() => setAiWarmup(null)} className="absolute top-6 right-6 p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={18} /></button>
+              <span className="font-black text-sm uppercase tracking-widest mb-5 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500"><Flame size={20} className="mr-3 text-orange-500"/> Pemanasan Hari Ini</span>
               <div className="text-[14px] leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-medium">{aiWarmup}</div>
             </div>
           )}
 
           {aiImbalance && (
-            <div className="bg-gradient-to-br from-cyan-50 to-white dark:from-[#081a20] dark:to-[#0f1117] border border-cyan-200/50 dark:border-cyan-900/30 p-6 rounded-[28px] animate-in slide-in-from-top-4 relative shadow-2xl shadow-cyan-500/10">
-              <button onClick={() => setAiImbalance(null)} className="absolute top-5 right-5 p-2 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={16} /></button>
-              <span className="font-black text-sm uppercase tracking-widest mb-4 flex items-center text-cyan-600 dark:text-cyan-500"><Scale size={18} className="mr-2.5"/> Fisioterapi AI</span>
+            <div className="bg-white dark:bg-[#0f1117] border border-cyan-100 dark:border-cyan-900/30 p-6 sm:p-8 rounded-[32px] animate-in slide-in-from-top-4 relative shadow-2xl shadow-cyan-500/10">
+              <button onClick={() => setAiImbalance(null)} className="absolute top-6 right-6 p-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={18} /></button>
+              <span className="font-black text-sm uppercase tracking-widest mb-5 flex items-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500"><Scale size={20} className="mr-3 text-cyan-500"/> Fisioterapi AI</span>
               <div className="text-[14px] leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-medium">{aiImbalance}</div>
             </div>
           )}
 
-          <div className="flex items-center justify-center my-10">
-            <div className="h-px bg-gray-200 dark:bg-gray-800/60 w-full max-w-[200px]"></div>
-            <Activity size={16} className="mx-4 text-gray-300 dark:text-gray-700" />
-            <div className="h-px bg-gray-200 dark:bg-gray-800/60 w-full max-w-[200px]"></div>
+          <div className="flex items-center justify-center my-10 opacity-60">
+            <div className="h-px bg-gradient-to-r from-transparent to-gray-300 dark:to-gray-700 w-full max-w-[150px]"></div>
+            <Activity size={18} className="mx-5 text-gray-400" />
+            <div className="h-px bg-gradient-to-l from-transparent to-gray-300 dark:to-gray-700 w-full max-w-[150px]"></div>
           </div>
 
           {/* Exercise List */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {exerciseData[activeTab].map(ex => (
               <ExerciseCard 
                 key={ex.id} exercise={ex} activeTab={activeTab}
                 onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
-                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} onUpdateExerciseVideo={handleUpdateExerciseVideo}
+                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise}
                 history={logs.filter(l => l.exerciseId === ex.id)} 
               />
             ))}
@@ -612,32 +539,30 @@ export default function App() {
 
           {/* Add Manual Form */}
           {isAddingExercise ? (
-            <form onSubmit={handleSaveCustom} className="bg-white dark:bg-[#0f1117] p-8 sm:p-10 rounded-[40px] border border-gray-200/80 dark:border-gray-800 shadow-2xl shadow-gray-200/50 dark:shadow-none animate-in zoom-in-95 duration-300 mt-10 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-500"></div>
-              <h3 className="font-black mb-6 text-sm uppercase tracking-widest text-gray-900 dark:text-white flex items-center"><PlusCircle size={20} className="mr-3 text-indigo-500"/> Gerakan Custom</h3>
-              <div className="space-y-5">
+            <form onSubmit={handleSaveCustom} className="bg-white dark:bg-[#0f1117] p-8 sm:p-10 rounded-[40px] border border-gray-200/80 dark:border-gray-800 shadow-2xl shadow-gray-200/50 dark:shadow-none animate-in zoom-in-95 duration-300 mt-12 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500"></div>
+              <h3 className="font-black mb-8 text-sm uppercase tracking-widest text-gray-900 dark:text-white flex items-center"><PlusCircle size={22} className="mr-3 text-violet-500"/> Gerakan Custom</h3>
+              <div className="space-y-6">
                 <div>
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Nama Mesin/Gerakan</label>
-                  <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Cth: Incline Dumbbell Press" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all" autoFocus disabled={isSavingCustom}/>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Nama Mesin/Gerakan</label>
+                  <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Cth: Incline Dumbbell Press" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4 text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all" autoFocus/>
                 </div>
                 <div>
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Target Otot (Opsional)</label>
-                  <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Cth: Dada Atas" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all" disabled={isSavingCustom}/>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Target Otot (Opsional)</label>
+                  <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Cth: Dada Atas" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl px-5 py-4 text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all" />
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row sm:space-x-3 pt-4 gap-3 sm:gap-0">
-                  <button type="button" onClick={() => setIsAddingExercise(false)} disabled={isSavingCustom} className="w-full sm:w-auto px-8 py-4 bg-gray-100 dark:bg-[#1a1d27] text-gray-600 dark:text-gray-300 text-[13px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors active:scale-95 disabled:opacity-50">Batal</button>
-                  <button type="submit" disabled={!newExercise.name || isSavingCustom} className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[13px] font-black uppercase tracking-widest py-4 rounded-2xl shadow-xl shadow-gray-900/20 dark:shadow-white/20 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center">
-                    {isSavingCustom ? <><Loader2 size={18} className="animate-spin mr-2"/> Mengambil Video AI...</> : 'Tambahkan Gerakan'}
-                  </button>
+                  <button type="button" onClick={() => setIsAddingExercise(false)} className="w-full sm:w-auto px-8 py-4.5 bg-gray-100 dark:bg-[#1a1d27] text-gray-600 dark:text-gray-300 text-[13px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors active:scale-95">Batal</button>
+                  <button type="submit" disabled={!newExercise.name} className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-[13px] font-black uppercase tracking-widest py-4.5 rounded-2xl shadow-lg shadow-violet-500/30 disabled:opacity-30 disabled:grayscale transition-all active:scale-95">Simpan Gerakan</button>
                 </div>
               </div>
             </form>
           ) : (
             <button 
               onClick={() => setIsAddingExercise(true)} 
-              className="w-full py-7 mt-10 border-2 border-dashed border-gray-300 dark:border-gray-800 text-gray-400 font-black uppercase tracking-widest rounded-[32px] flex items-center justify-center hover:bg-white dark:hover:bg-[#0f1117] hover:text-gray-900 dark:hover:text-white hover:border-indigo-500/50 transition-all text-sm active:scale-[0.98] group"
+              className="w-full py-8 mt-12 border-2 border-dashed border-gray-300 dark:border-gray-800 text-gray-400 font-black uppercase tracking-widest rounded-[40px] flex items-center justify-center hover:bg-white dark:hover:bg-[#0f1117] hover:text-gray-900 dark:hover:text-white hover:border-violet-500/50 transition-all text-sm active:scale-[0.98] group"
             >
-              <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-full mr-3 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"><Plus size={20} /></div>
+              <div className="bg-gray-100 dark:bg-gray-800 p-2.5 rounded-full mr-4 group-hover:bg-violet-100 dark:group-hover:bg-violet-500/20 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors"><Plus size={24} /></div>
               Gerakan Manual Baru
             </button>
           )}
