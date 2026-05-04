@@ -6,11 +6,11 @@ import {
   PlayCircle, Save, Zap, Skull, Scale, ChevronRight
 } from 'lucide-react';
 
-// Fungsi Ekstrak ID YouTube (tetap dipertahankan untuk kompatibilitas data lama)
+// Fungsi Ekstrak ID YouTube yang super tangguh (mendukung link Shorts, berbagi, dll)
 const getYouTubeId = (url) => {
   if (!url) return null;
   if (url.length === 11 && !url.includes('/')) return url; 
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
   const match = url.match(regExp);
   return (match && match[2].length === 11) ? match[2] : null;
 };
@@ -197,7 +197,19 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
               <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
                 <h3 className="text-[18px] sm:text-[20px] font-black text-gray-900 dark:text-white tracking-tight leading-tight">{exercise.name}</h3>
                 <div className="flex space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 mt-2 sm:mt-0">
-                  <button onClick={() => setIsEditingEx(true)} className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Gerakan & Video"><Edit2 size={14} /></button>
+                  <button onClick={() => {
+                      // Reset state input form ke data terbaru dari exercise sebelum mulai edit
+                      setExEditForm({ 
+                        name: exercise.name, 
+                        muscle: exercise.muscle,
+                        videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : ''
+                      });
+                      setIsEditingEx(true);
+                    }} 
+                    className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Gerakan & Video"
+                  >
+                    <Edit2 size={14} />
+                  </button>
                   <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>
                 </div>
               </div>
@@ -211,22 +223,31 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
         {/* Action Buttons: Berbaris ke kanan agar rapi di HP */}
         <div className="flex space-x-2 shrink-0 self-end sm:self-start w-full sm:w-auto justify-end">
-          <button 
-            onClick={(e) => {
-              if (exercise.videoId) {
+          {exercise.videoId ? (
+            <button 
+              onClick={(e) => {
                 e.preventDefault();
                 setShowVideo(!showVideo);
                 setAiTip(null);
                 setAiAlt(null);
-              } else {
-                window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`, '_blank');
-              }
-            }}
-            className={`p-3 rounded-2xl transition-all active:scale-95 border flex items-center justify-center ${showVideo ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/25' : 'bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} 
-            title={exercise.videoId ? "Putar Video Tutorial" : "Cari Tutorial di YouTube"}
-          >
-            <PlayCircle size={18} className={showVideo ? "animate-pulse" : ""} />
-          </button>
+              }}
+              className={`p-3 rounded-2xl transition-all active:scale-95 border flex items-center justify-center ${showVideo ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/25' : 'bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} 
+              title="Putar Video Tutorial"
+            >
+              <PlayCircle size={18} className={showVideo ? "animate-pulse" : ""} />
+            </button>
+          ) : (
+            <a 
+              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-3 rounded-2xl transition-all active:scale-95 border flex items-center justify-center bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10" 
+              title="Cari Tutorial di YouTube"
+            >
+              <PlayCircle size={18} />
+            </a>
+          )}
+          
           <button onClick={handleGetAlternative} className="p-3 rounded-2xl bg-white dark:bg-[#1a1d27] text-gray-500 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-800 transition-all active:scale-95 flex items-center justify-center group-hover:border-gray-300 dark:group-hover:border-gray-700">
             {isAiAltLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
           </button>
@@ -363,7 +384,7 @@ export default function App() {
   }, [isDarkMode]);
 
   const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [newExercise, setNewExercise] = useState({ name: '', muscle: '' });
+  const [newExercise, setNewExercise] = useState({ name: '', muscle: '', videoUrl: '' });
 
   // AI States
   const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
@@ -418,12 +439,15 @@ export default function App() {
 
   const onDeleteLog = (id) => { if(window.confirm("Hapus log permanen?")) setLogs(logs.filter(l => l.id !== id)); };
   const handleEditLog = (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
+  
   const handleSaveCustom = (e) => {
     e.preventDefault(); if (!newExercise.name) return;
-    const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', videoId: null };
+    const extractedVideoId = getYouTubeId(newExercise.videoUrl);
+    const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', videoId: extractedVideoId };
     setExerciseData({ ...exerciseData, [activeTab]: [...exerciseData[activeTab], item] });
-    setIsAddingExercise(false); setNewExercise({ name: '', muscle: '' });
+    setIsAddingExercise(false); setNewExercise({ name: '', muscle: '', videoUrl: '' });
   };
+  
   const handleDeleteExercise = (tab, id) => { if(window.confirm("Hapus master gerakan ini?")) setExerciseData(prev => ({ ...prev, [tab]: prev[tab].filter(ex => ex.id !== id) })); };
   
   const handleEditExercise = (tab, id, newName, newMuscle, newVideoId) => { 
@@ -577,6 +601,10 @@ export default function App() {
                 <div>
                   <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Target Otot (Opsional)</label>
                   <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Cth: Dada Atas" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Link YouTube Tutorial (Opsional)</label>
+                  <input type="text" value={newExercise.videoUrl} onChange={e => setNewExercise({...newExercise, videoUrl: e.target.value})} placeholder="Cth: https://youtu.be/..." className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row sm:space-x-3 pt-3 sm:pt-4 gap-3 sm:gap-0">
                   <button type="button" onClick={() => setIsAddingExercise(false)} className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-gray-100 dark:bg-[#1a1d27] text-gray-600 dark:text-gray-300 text-[13px] font-black uppercase tracking-widest rounded-xl sm:rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors active:scale-95">Batal</button>
