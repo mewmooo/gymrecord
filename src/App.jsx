@@ -3,16 +3,18 @@ import {
   Dumbbell, Calendar, History, Plus, ChevronDown, ChevronUp, 
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
-  PlayCircle, Save, Zap, Skull, Scale, ChevronRight
+  PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight
 } from 'lucide-react';
 
-// Fungsi Ekstrak ID YouTube yang super tangguh (mendukung link Shorts, berbagi, dll)
+// Fungsi Ekstrak ID YouTube yang diperbarui agar sangat akurat untuk Shorts & video biasa
 const getYouTubeId = (url) => {
   if (!url) return null;
+  // Jika user langsung memasukkan 11 karakter ID
   if (url.length === 11 && !url.includes('/')) return url; 
-  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
+  // Regex komprehensif untuk YouTube standard dan Shorts
+  const regExp = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))([\w-]{11})/;
   const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  return match ? match[1] : null;
 };
 
 // Data Master
@@ -384,7 +386,7 @@ export default function App() {
   }, [isDarkMode]);
 
   const [isAddingExercise, setIsAddingExercise] = useState(false);
-  const [newExercise, setNewExercise] = useState({ name: '', muscle: '', videoUrl: '' });
+  const [newExercise, setNewExercise] = useState({ name: '', muscle: '' });
 
   // AI States
   const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
@@ -442,10 +444,9 @@ export default function App() {
   
   const handleSaveCustom = (e) => {
     e.preventDefault(); if (!newExercise.name) return;
-    const extractedVideoId = getYouTubeId(newExercise.videoUrl);
-    const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', videoId: extractedVideoId };
+    const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', videoId: null };
     setExerciseData({ ...exerciseData, [activeTab]: [...exerciseData[activeTab], item] });
-    setIsAddingExercise(false); setNewExercise({ name: '', muscle: '', videoUrl: '' });
+    setIsAddingExercise(false); setNewExercise({ name: '', muscle: '' });
   };
   
   const handleDeleteExercise = (tab, id) => { if(window.confirm("Hapus master gerakan ini?")) setExerciseData(prev => ({ ...prev, [tab]: prev[tab].filter(ex => ex.id !== id) })); };
@@ -601,10 +602,6 @@ export default function App() {
                 <div>
                   <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Target Otot (Opsional)</label>
                   <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Cth: Dada Atas" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Link YouTube Tutorial (Opsional)</label>
-                  <input type="text" value={newExercise.videoUrl} onChange={e => setNewExercise({...newExercise, videoUrl: e.target.value})} placeholder="Cth: https://youtu.be/..." className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row sm:space-x-3 pt-3 sm:pt-4 gap-3 sm:gap-0">
                   <button type="button" onClick={() => setIsAddingExercise(false)} className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-gray-100 dark:bg-[#1a1d27] text-gray-600 dark:text-gray-300 text-[13px] font-black uppercase tracking-widest rounded-xl sm:rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors active:scale-95">Batal</button>
