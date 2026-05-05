@@ -102,7 +102,14 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   }
   
   const combinedPrompt = isRaw ? prompt : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-5 kalimat. Analisis data secara harfiah.\n\n" + prompt;
-  const modelsToTry = ['gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro', 'gemini-2.5-pro', 'gemini-2.5-flash'];
+  
+  // Menambahkan model Gemma 3 dan Gemma 4 sesuai dengan ketersediaan
+  const modelsToTry = [
+    'gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro', 
+    'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite',
+    'gemma-4-31b', 'gemma-4-26b', 'gemma-3-2b',
+    'gemini-2-flash', 'gemini-1.5-flash'
+  ];
 
   for (const modelName of modelsToTry) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
