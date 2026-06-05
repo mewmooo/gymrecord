@@ -4,7 +4,7 @@ import {
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
   PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight, Timer, Trophy, BarChart2, Crown, Play, Pause, Clock,
-  Battery, BatteryCharging, BatteryFull, PenTool, BookOpen, MessageSquare
+  Battery, BatteryCharging, BatteryFull, PenTool, BookOpen, MessageSquare, Heart, CheckSquare, MoonStar
 } from 'lucide-react';
 
 // Fungsi Ekstrak ID YouTube
@@ -16,9 +16,8 @@ const getYouTubeId = (url) => {
   return match ? match[1] : null;
 };
 
-// Kalkulator Estimasi 1 Rep Max (1RM) - Rumus Epley
+// Kalkulator Estimasi 1 Rep Max (1RM)
 const calculate1RM = (weight, reps, rpe = 10) => {
-  // Penyesuaian 1RM dengan RPE (Semakin jauh dari failure/RPE 10, reps cadangan ditambahkan)
   const repsInReserve = 10 - rpe; 
   const effectiveReps = reps + repsInReserve;
   return weight * (1 + effectiveReps / 30);
@@ -103,7 +102,6 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   
   const combinedPrompt = isRaw ? prompt : "Anda adalah Pelatih Kebugaran Profesional tingkat lanjut. Jawab dalam Bahasa Indonesia, gunakan nada profesional, asik, namun suportif. Ringkas maksimal 3-5 kalimat. Analisis data secara harfiah.\n\n" + prompt;
   
-  // Menambahkan model Gemma 3 dan Gemma 4 sesuai dengan ketersediaan
   const modelsToTry = [
     'gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro', 
     'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite',
@@ -129,7 +127,6 @@ const MuscleRecovery = ({ logs, exerciseData }) => {
     const now = Date.now();
     const muscleLogs = {};
     
-    // Filter log 72 jam terakhir
     logs.filter(l => (now - l.timestamp) <= 72 * 60 * 60 * 1000).forEach(l => {
        const muscle = getMuscleById(l.exerciseId, exerciseData);
        if (!muscleLogs[muscle] || l.timestamp > muscleLogs[muscle]) {
@@ -191,7 +188,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [weight, setWeight] = useState('');
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
-  const [rpe, setRpe] = useState(''); // NEW: State RPE
+  const [rpe, setRpe] = useState('');
   const [setType, setSetType] = useState('Normal'); 
   const [tempSubSets, setTempSubSets] = useState([]); 
   const [showHistory, setShowHistory] = useState(false);
@@ -202,7 +199,6 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ weight: '', sets: '', reps: '' });
 
-  // AI & Video States
   const [showVideo, setShowVideo] = useState(false);
   const [aiTip, setAiTip] = useState(null);
   const [isAiTipLoading, setIsAiTipLoading] = useState(false);
@@ -211,12 +207,9 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [aiProgress, setAiProgress] = useState(null);
   const [isAiProgressLoading, setIsAiProgressLoading] = useState(false);
 
-  // Edit Exercise State
   const [isEditingEx, setIsEditingEx] = useState(false);
   const [exEditForm, setExEditForm] = useState({ 
-    name: exercise.name, 
-    muscle: exercise.muscle,
-    targetSets: exercise.targetSets || 3,
+    name: exercise.name, muscle: exercise.muscle, targetSets: exercise.targetSets || 3,
     videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : ''
   });
 
@@ -266,18 +259,12 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
       if (!weight || !sets || !reps) return;
       w = parseFloat(weight); r = parseInt(reps); rpeVal = rpe ? parseInt(rpe) : 10;
       new1RM = calculate1RM(w, r, rpeVal);
-      logData = { 
-        exerciseId: exercise.id, weight: w, sets: parseInt(sets), reps: r, rpe: rpeVal,
-        setType: setType, oneRepMax: parseFloat(new1RM.toFixed(1)) 
-      };
+      logData = { exerciseId: exercise.id, weight: w, sets: parseInt(sets), reps: r, rpe: rpeVal, setType: setType, oneRepMax: parseFloat(new1RM.toFixed(1)) };
     } else {
       if (tempSubSets.length === 0) return;
       w = tempSubSets[0].weight; r = tempSubSets[0].reps; rpeVal = tempSubSets[0].rpe || 10;
       new1RM = calculate1RM(w, r, rpeVal);
-      logData = { 
-        exerciseId: exercise.id, weight: w, sets: tempSubSets.length, reps: r, rpe: rpeVal,
-        setType: setType, subSets: tempSubSets, oneRepMax: parseFloat(new1RM.toFixed(1)) 
-      };
+      logData = { exerciseId: exercise.id, weight: w, sets: tempSubSets.length, reps: r, rpe: rpeVal, setType: setType, subSets: tempSubSets, oneRepMax: parseFloat(new1RM.toFixed(1)) };
     }
 
     const max1RM = getCurrentMax1RM();
@@ -468,10 +455,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         )}
       </div>
 
-      {/* Input Form & Tipe Set Toggles */}
       <div className="bg-gray-50/50 dark:bg-[#0a0a0a] p-3 sm:p-4 rounded-3xl border border-gray-100 dark:border-gray-800/80 mb-6">
-        
-        {/* Superset / Drop Set Selector */}
         <div className="flex gap-1.5 sm:gap-2 mb-3 overflow-x-auto no-scrollbar pb-1">
           {['Normal', 'Drop Set', 'Superset'].map(type => (
             <button 
@@ -495,7 +479,6 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         )}
 
         <form onSubmit={onFormSubmit} className={`flex flex-col sm:flex-row gap-2.5 sm:gap-2 ${setType !== 'Normal' ? 'items-stretch' : ''}`}>
-          {/* Kolom Inputs Dibuat Menjadi Grid Dinamis */}
           <div className={`grid gap-2 w-full ${setType === 'Normal' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
             <div className="relative">
               <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-gray-400">KG</span>
@@ -534,7 +517,6 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         </form>
       </div>
 
-      {/* Modern History Section */}
       {history.length > 0 && (
         <div className="mt-2">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center px-2 mb-4 gap-3 sm:gap-0">
@@ -631,7 +613,6 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         </div>
       )}
 
-      {/* Modal PR (Rekor Pribadi) */}
       {prModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-gradient-to-b from-amber-400 to-amber-600 p-1 rounded-[36px] shadow-2xl shadow-amber-500/30 animate-in zoom-in-95 duration-500 bounce">
@@ -651,28 +632,24 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 };
 
 // --- KOMPONEN: INSIGHTS & CALENDAR MODAL ---
-const InsightsModal = ({ logs, exerciseData, onClose }) => {
+const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
   const [days, setDays] = useState([]);
   const [activeDates, setActiveDates] = useState(new Set());
   const [weeklyVolume, setWeeklyVolume] = useState([]);
 
   useEffect(() => {
-    // 1. Setup Kalender Heatmap
     const today = new Date();
     today.setHours(0,0,0,0);
     const last35Days = Array.from({length: 35}, (_, i) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() - (34 - i));
-        return d;
+        const d = new Date(today); d.setDate(d.getDate() - (34 - i)); return d;
     });
     setDays(last35Days);
     const logDates = new Set(logs.map(l => l.date));
     setActiveDates(logDates);
 
-    // 2. Kalkulasi Weekly Volume Tracker
     const startOfWeek = new Date(today);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Mundur ke hari Senin
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
 
     const volume = {};
@@ -682,10 +659,18 @@ const InsightsModal = ({ logs, exerciseData, onClose }) => {
        volume[muscle] = (volume[muscle] || 0) + setsDone;
     });
     
-    // Convert to array and sort by volume (descending)
-    const sortedVolume = Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets);
-    setWeeklyVolume(sortedVolume);
+    setWeeklyVolume(Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets));
   }, [logs, exerciseData]);
+
+  // Kalkulasi Rata-rata Kesehatan 
+  const healthList = Object.values(healthData);
+  const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
+  const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
+  
+  // Mengubah menit tidur menjadi Jam & Menit
+  const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
+  const sleepHours = Math.floor(avgSleepMins / 60);
+  const sleepMins = avgSleepMins % 60;
 
   return (
     <div className="bg-white dark:bg-[#11131a] w-full max-w-md rounded-[36px] p-6 sm:p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
@@ -694,7 +679,34 @@ const InsightsModal = ({ logs, exerciseData, onClose }) => {
         <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={16}/></button>
       </div>
 
-      {/* Bagian 1: Kalender */}
+      {healthList.length > 0 && (
+        <div className="mb-8">
+           <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Metrik Kesehatan (Apple Health)</h3>
+           <div className="grid grid-cols-2 gap-3 mb-3">
+             <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-4 rounded-2xl">
+               <Heart size={16} className="text-rose-500 mb-2" />
+               <div className="text-xl font-black text-gray-900 dark:text-white">{avgHr} <span className="text-[10px] font-bold text-gray-500 uppercase">BPM</span></div>
+               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Rata-rata HR</div>
+             </div>
+             <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 p-4 rounded-2xl">
+               <Flame size={16} className="text-orange-500 mb-2" />
+               <div className="text-xl font-black text-gray-900 dark:text-white">{avgCals} <span className="text-[10px] font-bold text-gray-500 uppercase">Kcal</span></div>
+               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Avg Kalori Sesi</div>
+             </div>
+           </div>
+           <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-2xl w-full flex items-center justify-between">
+              <div>
+                 <MoonStar size={16} className="text-indigo-500 mb-2" />
+                 <div className="text-[9px] font-black uppercase text-gray-400">Rata-rata Tidur (7 Hari)</div>
+              </div>
+              <div className="text-xl font-black text-gray-900 dark:text-white text-right">
+                {sleepHours}<span className="text-[10px] font-bold text-gray-500 uppercase mx-1">J</span> 
+                {sleepMins}<span className="text-[10px] font-bold text-gray-500 uppercase ml-1">M</span>
+              </div>
+           </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Konsistensi Latihan</h3>
         <div className="grid grid-cols-7 gap-2">
@@ -714,30 +726,24 @@ const InsightsModal = ({ logs, exerciseData, onClose }) => {
         </div>
       </div>
 
-      {/* Bagian 2: Weekly Volume Tracker */}
       <div>
         <div className="flex justify-between items-center mb-4">
            <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Volume Otot Minggu Ini</h3>
            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">Target: 10-20 Set</span>
         </div>
-        
         {weeklyVolume.length === 0 ? (
           <p className="text-xs font-medium text-gray-500 italic text-center py-4 bg-gray-50 dark:bg-[#1a1d27] rounded-2xl">Belum ada latihan minggu ini.</p>
         ) : (
           <div className="space-y-4">
             {weeklyVolume.map((item, idx) => {
-              const maxSets = 20; 
-              const pct = Math.min(100, (item.sets / maxSets) * 100);
-              // Warna bar: < 10 (kuning), 10-20 (hijau), >20 (merah/overtraining)
+              const maxSets = 20; const pct = Math.min(100, (item.sets / maxSets) * 100);
               let color = "bg-amber-500";
               if (item.sets >= 10 && item.sets <= 20) color = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
               else if (item.sets > 20) color = "bg-rose-500";
-
               return (
                 <div key={idx} className="relative">
                   <div className="flex justify-between text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">
-                    <span>{item.muscle}</span>
-                    <span>{item.sets} Set</span>
+                    <span>{item.muscle}</span><span>{item.sets} Set</span>
                   </div>
                   <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${pct}%` }}></div>
@@ -758,26 +764,22 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  // Gunakan Local Storage V11 (Sistem Offline)
   const [logs, setLogs] = useState(() => { const saved = localStorage.getItem('gym_logs_v11'); return saved ? JSON.parse(saved) : []; });
   const [exerciseData, setExerciseData] = useState(() => { const saved = localStorage.getItem('gym_exercises_v11'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; });
+  const [healthData, setHealthData] = useState(() => { const saved = localStorage.getItem('gym_health_v2'); return saved ? JSON.parse(saved) : {}; });
   
-  // Daily Journal State
   const [dailyNote, setDailyNote] = useState('');
-
   const [confirmDialog, setConfirmDialog] = useState(null);
-  
-  // State Global Timer Manual
   const [restTime, setRestTime] = useState(0); 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
-  
-  // State Insights Modal
   const [showInsightsModal, setShowInsightsModal] = useState(false);
-
-  // Pre-Workout Briefing State
   const [preWorkoutAdvice, setPreWorkoutAdvice] = useState(null);
   const [isPreWorkoutLoading, setIsPreWorkoutLoading] = useState(false);
+
+  // Modal Akhiri Sesi (Manual Input opsional jika Apple Health gagal)
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
+  const [healthMetrics, setHealthMetrics] = useState({ duration: '', cals: '', hr: '', sleep: '' });
 
   useEffect(() => {
     const savedDark = localStorage.getItem('gym_dark_pro');
@@ -790,18 +792,44 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
-  // Load Daily Note when tab/date changes
   useEffect(() => {
     const today = new Date().toLocaleDateString('id-ID');
     const allNotes = JSON.parse(localStorage.getItem('gym_notes_v12') || '{}');
     setDailyNote(allNotes[today] || '');
   }, []);
 
-  // Simpan data offline
   useEffect(() => { localStorage.setItem('gym_logs_v11', JSON.stringify(logs)); }, [logs]);
   useEffect(() => { localStorage.setItem('gym_exercises_v11', JSON.stringify(exerciseData)); }, [exerciseData]);
+  useEffect(() => { localStorage.setItem('gym_health_v2', JSON.stringify(healthData)); }, [healthData]);
 
-  // Simpan Journal
+  // --- SENSOR PENANGKAP URL DARI APPLE SHORTCUTS ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    
+    if (action === 'sync_health') {
+      const hr = parseInt(params.get('hr')) || 0;
+      const cals = parseInt(params.get('cals')) || 0;
+      const sleep = parseFloat(params.get('sleep')) || 0; // dalam menit
+      
+      const today = new Date().toLocaleDateString('id-ID');
+      
+      setHealthData(prev => ({
+         ...prev,
+         [today]: { ...prev[today], hr, cals, sleep }
+      }));
+
+      // Bersihkan URL agar rapi kembali
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      setConfirmDialog({ 
+        message: "Data Kalori, Detak Jantung, dan Tidur dari Apple Health berhasil disinkronkan secara ajaib!", 
+        onConfirm: () => setConfirmDialog(null), 
+        isAlert: true 
+      });
+    }
+  }, []);
+
   const handleSaveNote = (val) => {
     setDailyNote(val);
     const today = new Date().toLocaleDateString('id-ID');
@@ -810,7 +838,23 @@ export default function App() {
     localStorage.setItem('gym_notes_v12', JSON.stringify(allNotes));
   };
 
-  // Timer Manual Effect
+  const handleSaveHealthMetrics = (e) => {
+    e.preventDefault();
+    if (!healthMetrics.cals && !healthMetrics.hr && !healthMetrics.sleep) return;
+    
+    const today = new Date().toLocaleDateString('id-ID');
+    const newHealthData = { ...healthData, [today]: {
+       duration: parseInt(healthMetrics.duration) || 0,
+       cals: parseInt(healthMetrics.cals) || 0,
+       hr: parseInt(healthMetrics.hr) || 0,
+       sleep: parseInt(healthMetrics.sleep) || 0,
+    }};
+    
+    setHealthData(newHealthData);
+    setShowEndSessionModal(false);
+    setHealthMetrics({ duration: '', cals: '', hr: '', sleep: '' });
+  };
+
   useEffect(() => {
     let timer;
     if (isTimerRunning && restTime > 0) {
@@ -833,7 +877,6 @@ export default function App() {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle: '', targetSets: '' });
 
-  // AI States
   const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isRoastLoading, setIsRoastLoading] = useState(false);
@@ -843,17 +886,21 @@ export default function App() {
   const handleGetPreWorkoutBriefing = async () => {
     setIsPreWorkoutLoading(true);
     
-    // Ambil histori angkatan terbaru
+    // Siapkan data jurnal, histori latihan, dan metrik kesehatan
     const recentLogs = logs.slice(0, 15).map(l => {
       const exName = (exerciseData[activeTab] || Object.values(exerciseData).flat()).find(e => e.id === l.exerciseId)?.name || l.exerciseId;
       return `${exName}: ${l.weight}kg x ${l.reps}`;
     }).join(', ');
     
-    // Ambil jurnal catatan dari hari-hari sebelumnya
     const allNotes = JSON.parse(localStorage.getItem('gym_notes_v12') || '{}');
     const recentNotesStr = Object.entries(allNotes).slice(-3).map(([k,v]) => `(${k}) ${v}`).join(' | ');
 
-    const prompt = `Saya akan memulai sesi latihan: ${activeTab} hari ini. \nCatatan/jurnal kondisi saya beberapa hari terakhir: [${recentNotesStr || 'Tidak ada catatan khusus'}]. \nHistori angkatan terakhir: [${recentLogs || 'Belum ada data'}]. \nSebagai pelatih gym profesional, berikan "Pre-Workout Briefing" singkat (maksimal 3 kalimat). Analisis kondisi/mood saya dari jurnal, dan berikan strategi, saran beban, atau fokus mental untuk sesi ${activeTab} hari ini.`;
+    // Cek metrik kesehatan terbaru (Terutama Tidur)
+    const today = new Date().toLocaleDateString('id-ID');
+    const todayHealth = healthData[today] || Object.values(healthData).pop() || {};
+    const sleepInfo = todayHealth.sleep ? `\nSemalam saya tidur selama ${Math.floor(todayHealth.sleep/60)} jam ${todayHealth.sleep%60} menit.` : '';
+
+    const prompt = `Saya akan memulai sesi latihan: ${activeTab} hari ini. \nCatatan/jurnal kondisi saya beberapa hari terakhir: [${recentNotesStr || 'Tidak ada catatan khusus'}]. \nHistori angkatan terakhir: [${recentLogs || 'Belum ada data'}]. ${sleepInfo} \n\nSebagai pelatih gym profesional, berikan "Pre-Workout Briefing" singkat (maksimal 3 kalimat). Analisis kondisi/mood dan kualitas tidur saya, lalu berikan strategi, saran intensitas beban, atau fokus mental untuk sesi ${activeTab} hari ini.`;
 
     const response = await callGeminiAPI(prompt);
     setPreWorkoutAdvice(response || "Gagal menghubungi AI. Silakan coba lagi.");
@@ -863,8 +910,20 @@ export default function App() {
   const handleGenerateSummary = async () => {
     if (logs.length === 0) return;
     setIsSummaryLoading(true);
+    
     const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
-    const response = await callGeminiAPI(`Saya baru latihan: ${workoutData}. Berikan pujian dan evaluasi analitis singkat.`);
+    
+    // Cek metrik kesehatan terbaru (HR dan Kalori)
+    const today = new Date().toLocaleDateString('id-ID');
+    const todayHealth = healthData[today] || {};
+    let healthContext = '';
+    if (todayHealth.cals || todayHealth.hr) {
+      healthContext = `\nMetrik *Smartband* saya: Membakar ${todayHealth.cals || 0} kcal, dengan Rata-rata Detak Jantung ${todayHealth.hr || 0} BPM.`;
+    }
+
+    const prompt = `Saya baru latihan: ${workoutData}. ${healthContext} \nBerikan pujian dan evaluasi analitis singkat ala pelatih profesional. Beri komentar juga mengenai metrik detak jantung/kalori saya jika ada.`;
+    
+    const response = await callGeminiAPI(prompt);
     setAiBannerData({ text: response, type: 'summary' }); setIsSummaryLoading(false);
   };
 
@@ -886,41 +945,28 @@ export default function App() {
 
   const handleAddLog = async (log) => {
     const newLog = { 
-      ...log, 
-      id: Date.now().toString(),
+      ...log, id: Date.now().toString(),
       date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }), 
-      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      timestamp: Date.now()
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), timestamp: Date.now()
     };
     setLogs([newLog, ...logs]);
   };
 
   const onDeleteLog = (id) => { 
-    setConfirmDialog({
-      message: "Data log ini akan dihapus permanen. Anda yakin?",
-      onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }
-    });
+    setConfirmDialog({ message: "Data log ini akan dihapus permanen. Anda yakin?", onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }});
   };
 
-  const handleEditLog = async (id, updatedData) => { 
-    setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log));
-  };
+  const handleEditLog = async (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
   
   const handleSaveCustom = async (e) => {
     e.preventDefault(); if (!newExercise.name) return;
-    const item = { 
-      id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', 
-      targetSets: newExercise.targetSets ? parseInt(newExercise.targetSets) : 3, videoId: null 
-    };
+    const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', targetSets: newExercise.targetSets ? parseInt(newExercise.targetSets) : 3, videoId: null };
     setExerciseData(prev => ({ ...prev, [activeTab]: [...(prev[activeTab] || []), item] }));
     setIsAddingExercise(false); setNewExercise({ name: '', muscle: '', targetSets: '' });
   };
   
   const handleDeleteExercise = (tab, id) => { 
-    setConfirmDialog({
-      message: "Seluruh gerakan ini dan konfigurasinya akan dihapus permanen dari jadwal Anda. Lanjutkan?",
-      onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }
-    });
+    setConfirmDialog({ message: "Seluruh gerakan ini dan konfigurasinya akan dihapus permanen dari jadwal Anda. Lanjutkan?", onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }});
   };
   
   const handleEditExercise = async (tab, id, newName, newMuscle, newTargetSets, newVideoId) => { 
@@ -1071,7 +1117,7 @@ export default function App() {
               <ExerciseCard 
                 key={ex.id} exercise={ex} activeTab={activeTab} 
                 onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
-                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} onUpdateExerciseVideo={handleUpdateExerciseVideo}
+                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} 
                 history={logs.filter(l => l.exerciseId === ex.id)} 
               />
             ))}
@@ -1112,6 +1158,14 @@ export default function App() {
             </button>
           )}
 
+          {/* --- TOMBOL AKHIRI SESI (MANUAL HEALTH INPUT) --- */}
+          <button 
+             onClick={() => setShowEndSessionModal(true)}
+             className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-3xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/30 flex items-center justify-center active:scale-[0.98] transition-all mt-8"
+          >
+             <CheckSquare size={20} className="mr-2" /> Akhiri Sesi Hari Ini
+          </button>
+
           {/* --- JURNAL SESI HARIAN --- */}
           <div className="mt-12 bg-yellow-50 dark:bg-[#1c1810] border border-yellow-200 dark:border-yellow-900/30 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 p-6 opacity-10"><BookOpen size={100} className="text-yellow-600" /></div>
@@ -1126,6 +1180,45 @@ export default function App() {
 
         </main>
       </div>
+
+      {/* Modal End Workout Summary */}
+      {showEndSessionModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[36px] p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center"><CheckSquare size={18} className="mr-2 text-emerald-500" /> Selesai Latihan</h4>
+              <button onClick={() => setShowEndSessionModal(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={16}/></button>
+            </div>
+            
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-6 font-medium leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+              Biarkan kosong jika Anda menggunakan <b>Pintasan Apple Health</b> untuk sinkronisasi otomatis. Isi manual hanya jika Anda tidak menggunakan iOS.
+            </p>
+
+            <form onSubmit={handleSaveHealthMetrics} className="space-y-4">
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Clock size={16}/></span>
+                <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Durasi (Menit)" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"><Flame size={16}/></span>
+                <input type="number" value={healthMetrics.cals} onChange={(e) => setHealthMetrics({...healthMetrics, cals: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Kalori Terbakar (Kcal)" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500"><Heart size={16}/></span>
+                <input type="number" value={healthMetrics.hr} onChange={(e) => setHealthMetrics({...healthMetrics, hr: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Avg Detak Jantung (BPM)" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"><MoonStar size={16}/></span>
+                <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Lama Tidur Semalam (Total Menit)" />
+              </div>
+              
+              <button type="submit" className="w-full mt-4 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                Simpan Manual
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Floating Timer */}
       {restTime > 0 && !showTimerModal && (
@@ -1142,7 +1235,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative animate-in zoom-in-95 duration-300 w-full max-w-md">
             <button onClick={() => setShowInsightsModal(false)} className="absolute -top-12 right-0 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-colors"><X size={20}/></button>
-            <InsightsModal logs={logs} exerciseData={exerciseData} onClose={() => setShowInsightsModal(false)} />
+            <InsightsModal logs={logs} exerciseData={exerciseData} healthData={healthData} onClose={() => setShowInsightsModal(false)} />
           </div>
         </div>
       )}
