@@ -4,7 +4,7 @@ import {
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
   PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight, Timer, Trophy, BarChart2, Crown, Play, Pause, Clock,
-  Battery, BatteryCharging, BatteryFull, PenTool, BookOpen, MessageSquare, Heart, CheckSquare, MoonStar
+  Battery, BatteryCharging, BatteryFull, PenTool, BookOpen, MessageSquare, Heart, CheckSquare, MoonStar, Wind
 } from 'lucide-react';
 
 // Fungsi Ekstrak ID YouTube
@@ -662,10 +662,11 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
     setWeeklyVolume(Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets));
   }, [logs, exerciseData]);
 
-  // Kalkulasi Rata-rata Kesehatan 
+  // Kalkulasi Rata-rata Kesehatan (Jika Ada)
   const healthList = Object.values(healthData);
   const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
   const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
+  const avgSpo2 = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.spo2 || 0), 0) / healthList.length) : 0;
   
   // Mengubah menit tidur menjadi Jam & Menit
   const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
@@ -693,16 +694,19 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
                <div className="text-xl font-black text-gray-900 dark:text-white">{avgCals} <span className="text-[10px] font-bold text-gray-500 uppercase">Kcal</span></div>
                <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Avg Kalori Sesi</div>
              </div>
-           </div>
-           <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-2xl w-full flex items-center justify-between">
-              <div>
-                 <MoonStar size={16} className="text-indigo-500 mb-2" />
-                 <div className="text-[9px] font-black uppercase text-gray-400">Rata-rata Tidur (7 Hari)</div>
-              </div>
-              <div className="text-xl font-black text-gray-900 dark:text-white text-right">
-                {sleepHours}<span className="text-[10px] font-bold text-gray-500 uppercase mx-1">J</span> 
-                {sleepMins}<span className="text-[10px] font-bold text-gray-500 uppercase ml-1">M</span>
-              </div>
+             <div className="bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/20 p-4 rounded-2xl">
+               <Wind size={16} className="text-sky-500 mb-2" />
+               <div className="text-xl font-black text-gray-900 dark:text-white">{avgSpo2 > 0 ? avgSpo2 : '--'} <span className="text-[10px] font-bold text-gray-500 uppercase">%</span></div>
+               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Oksigen Darah</div>
+             </div>
+             <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-2xl flex flex-col justify-center">
+                <MoonStar size={16} className="text-indigo-500 mb-2" />
+                <div className="text-xl font-black text-gray-900 dark:text-white leading-none">
+                  {sleepHours}<span className="text-[10px] font-bold text-gray-500 uppercase mx-1">J</span> 
+                  {sleepMins}<span className="text-[10px] font-bold text-gray-500 uppercase ml-1">M</span>
+                </div>
+                <div className="text-[9px] font-black uppercase text-gray-400 mt-1.5">Tidur (7 Hari)</div>
+             </div>
            </div>
         </div>
       )}
@@ -779,7 +783,7 @@ export default function App() {
 
   // Modal Akhiri Sesi (Manual Input opsional jika Apple Health gagal)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
-  const [healthMetrics, setHealthMetrics] = useState({ duration: '', cals: '', hr: '', sleep: '' });
+  const [healthMetrics, setHealthMetrics] = useState({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
 
   useEffect(() => {
     const savedDark = localStorage.getItem('gym_dark_pro');
@@ -808,22 +812,32 @@ export default function App() {
     const action = params.get('action');
     
     if (action === 'sync_health') {
-      const hr = parseInt(params.get('hr')) || 0;
-      const cals = parseInt(params.get('cals')) || 0;
-      const sleep = parseFloat(params.get('sleep')) || 0; // dalam menit
+      const hrRaw = params.get('hr') ? parseFloat(params.get('hr').replace(',', '.')) : 0;
+      const hr = isNaN(hrRaw) ? 0 : Math.round(hrRaw);
+      
+      const calsRaw = params.get('cals') ? parseFloat(params.get('cals').replace(',', '.')) : 0;
+      const cals = isNaN(calsRaw) ? 0 : Math.round(calsRaw);
+      
+      const sleepRaw = params.get('sleep') ? parseFloat(params.get('sleep').replace(',', '.')) : 0;
+      const sleep = isNaN(sleepRaw) ? 0 : Math.round(sleepRaw);
+
+      const spo2Raw = params.get('spo2') ? parseFloat(params.get('spo2').replace(',', '.')) : 0;
+      let spo2 = isNaN(spo2Raw) ? 0 : spo2Raw;
+      if (spo2 > 0 && spo2 <= 1) spo2 = Math.round(spo2 * 100);
+      else spo2 = Math.round(spo2);
       
       const today = new Date().toLocaleDateString('id-ID');
       
       setHealthData(prev => ({
          ...prev,
-         [today]: { ...prev[today], hr, cals, sleep }
+         [today]: { ...prev[today], hr, cals, sleep, spo2 }
       }));
 
       // Bersihkan URL agar rapi kembali
       window.history.replaceState({}, document.title, window.location.pathname);
       
       setConfirmDialog({ 
-        message: "Data Kalori, Detak Jantung, dan Tidur dari Apple Health berhasil disinkronkan secara ajaib!", 
+        message: `Sinkronisasi berhasil! (HR: ${hr} bpm, Kalori: ${cals} kcal, Tidur: ${Math.floor(sleep/60)}j ${sleep%60}m, Oksigen: ${spo2}%)`, 
         onConfirm: () => setConfirmDialog(null), 
         isAlert: true 
       });
@@ -840,7 +854,7 @@ export default function App() {
 
   const handleSaveHealthMetrics = (e) => {
     e.preventDefault();
-    if (!healthMetrics.cals && !healthMetrics.hr && !healthMetrics.sleep) return;
+    if (!healthMetrics.cals && !healthMetrics.hr && !healthMetrics.sleep && !healthMetrics.spo2) return;
     
     const today = new Date().toLocaleDateString('id-ID');
     const newHealthData = { ...healthData, [today]: {
@@ -848,13 +862,15 @@ export default function App() {
        cals: parseInt(healthMetrics.cals) || 0,
        hr: parseInt(healthMetrics.hr) || 0,
        sleep: parseInt(healthMetrics.sleep) || 0,
+       spo2: parseInt(healthMetrics.spo2) || 0,
     }};
     
     setHealthData(newHealthData);
     setShowEndSessionModal(false);
-    setHealthMetrics({ duration: '', cals: '', hr: '', sleep: '' });
+    setHealthMetrics({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
   };
 
+  // Timer Manual Effect
   useEffect(() => {
     let timer;
     if (isTimerRunning && restTime > 0) {
@@ -886,7 +902,6 @@ export default function App() {
   const handleGetPreWorkoutBriefing = async () => {
     setIsPreWorkoutLoading(true);
     
-    // Siapkan data jurnal, histori latihan, dan metrik kesehatan
     const recentLogs = logs.slice(0, 15).map(l => {
       const exName = (exerciseData[activeTab] || Object.values(exerciseData).flat()).find(e => e.id === l.exerciseId)?.name || l.exerciseId;
       return `${exName}: ${l.weight}kg x ${l.reps}`;
@@ -895,7 +910,6 @@ export default function App() {
     const allNotes = JSON.parse(localStorage.getItem('gym_notes_v12') || '{}');
     const recentNotesStr = Object.entries(allNotes).slice(-3).map(([k,v]) => `(${k}) ${v}`).join(' | ');
 
-    // Cek metrik kesehatan terbaru (Terutama Tidur)
     const today = new Date().toLocaleDateString('id-ID');
     const todayHealth = healthData[today] || Object.values(healthData).pop() || {};
     const sleepInfo = todayHealth.sleep ? `\nSemalam saya tidur selama ${Math.floor(todayHealth.sleep/60)} jam ${todayHealth.sleep%60} menit.` : '';
@@ -913,7 +927,6 @@ export default function App() {
     
     const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
     
-    // Cek metrik kesehatan terbaru (HR dan Kalori)
     const today = new Date().toLocaleDateString('id-ID');
     const todayHealth = healthData[today] || {};
     let healthContext = '';
@@ -1197,7 +1210,7 @@ export default function App() {
             <form onSubmit={handleSaveHealthMetrics} className="space-y-4">
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Clock size={16}/></span>
-                <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Durasi (Menit)" />
+                <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Durasi Latihan (Menit)" />
               </div>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"><Flame size={16}/></span>
@@ -1209,7 +1222,11 @@ export default function App() {
               </div>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"><MoonStar size={16}/></span>
-                <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Lama Tidur Semalam (Total Menit)" />
+                <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Lama Tidur Semalam (Menit)" />
+              </div>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sky-500"><Wind size={16}/></span>
+                <input type="number" step="0.1" value={healthMetrics.spo2} onChange={(e) => setHealthMetrics({...healthMetrics, spo2: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Oksigen Darah SpO2 (%)" />
               </div>
               
               <button type="submit" className="w-full mt-4 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">
