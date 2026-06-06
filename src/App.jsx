@@ -3,7 +3,8 @@ import {
   Dumbbell, Calendar, History, Plus, ChevronDown, ChevronUp, 
   CheckCircle, Activity, Edit2, Trash2, X, Check, Sparkles, Loader2, Bot,
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
-  PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight, Clock, BookOpen, PenTool, CheckSquare, Heart, MoonStar
+  PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight, Clock, BookOpen, PenTool, CheckSquare, Heart, MoonStar,
+  Home, Timer, Trophy, BarChart2, Crown, Play, Pause, Droplets, Battery, BatteryCharging, BatteryFull
 } from 'lucide-react';
 
 // --- FUNGSI EKSTRAK YOUTUBE ID ---
@@ -128,6 +129,70 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   return null; 
 };
 
+// --- KOMPONEN: MUSCLE RECOVERY READINESS ---
+const MuscleRecovery = ({ logs, exerciseData }) => {
+  const [recoveryData, setRecoveryData] = useState([]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const muscleLogs = {};
+    
+    logs.filter(l => (now - l.timestamp) <= 72 * 60 * 60 * 1000).forEach(l => {
+       const muscle = getMuscleById(l.exerciseId, exerciseData);
+       if (!muscleLogs[muscle] || l.timestamp > muscleLogs[muscle]) {
+           muscleLogs[muscle] = l.timestamp;
+       }
+    });
+
+    const statusList = Object.entries(muscleLogs).map(([muscle, timestamp]) => {
+      const hoursAgo = (now - timestamp) / (1000 * 60 * 60);
+      let status = 'ready';
+      if (hoursAgo < 24) status = 'tired';
+      else if (hoursAgo < 48) status = 'recovering';
+      return { muscle, status, hoursAgo };
+    });
+
+    setRecoveryData(statusList.sort((a,b) => a.hoursAgo - b.hoursAgo));
+  }, [logs, exerciseData]);
+
+  if (recoveryData.length === 0) return null;
+
+  return (
+    <div className="mb-6 animate-in slide-in-from-top-2">
+      <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 px-1 flex items-center">
+        <Activity size={12} className="mr-1.5 text-indigo-500"/> Status Otot (72 Jam Terakhir)
+      </h4>
+      <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-2 px-1">
+        {recoveryData.map((item, idx) => {
+          let styles = "bg-green-50 border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400";
+          let Icon = BatteryFull;
+          let label = "Siap";
+          
+          if (item.status === 'tired') {
+             styles = "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400";
+             Icon = Battery;
+             label = "Lelah";
+          } else if (item.status === 'recovering') {
+             styles = "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400";
+             Icon = BatteryCharging;
+             label = "Pemulihan";
+          }
+
+          return (
+            <div key={idx} className={`flex items-center flex-shrink-0 px-3 py-2 rounded-2xl border ${styles} shadow-sm transition-all`}>
+               <Icon size={14} className="mr-2" />
+               <div className="flex flex-col">
+                 <span className="text-[11px] font-bold leading-tight">{item.muscle}</span>
+                 <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{label}</span>
+               </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  );
+};
+
 // --- KOMPONEN: KARTU LATIHAN (TRACK) ---
 const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, onUpdateExerciseVideo, activeTab }) => {
   const [weight, setWeight] = useState('');
@@ -140,6 +205,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   const [showHistory, setShowHistory] = useState(false);
   const [historyTab, setHistoryTab] = useState('list'); 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [prModal, setPrModal] = useState(false);
   
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ weight: '', sets: '', reps: '' });
@@ -235,7 +301,13 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
     }
 
     const max1RM = getCurrentMax1RM();
-    logData.isPR = (history.length > 0 && new1RM > max1RM);
+    if (history.length > 0 && new1RM > max1RM) {
+      logData.isPR = true;
+      setPrModal(true);
+      setTimeout(() => setPrModal(false), 4000);
+    } else {
+      logData.isPR = false;
+    }
 
     onLog(logData);
     setWeight(''); setSets(''); setReps(''); setRpe(''); setTempSubSets([]);
@@ -331,7 +403,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between sm:justify-start space-x-3 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
                 <h3 className="text-[19px] sm:text-[21px] font-black text-gray-900 dark:text-white tracking-tight leading-tight">{exercise.name}</h3>
                 <div className="flex space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 mt-2 sm:mt-0">
                   <button onClick={() => {
@@ -597,27 +669,155 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   );
 };
 
+const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
+  const [days, setDays] = useState([]);
+  const [activeDates, setActiveDates] = useState(new Set());
+  const [weeklyVolume, setWeeklyVolume] = useState([]);
+
+  useEffect(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const last35Days = Array.from({length: 35}, (_, i) => {
+        const d = new Date(today); d.setDate(d.getDate() - (34 - i)); return d;
+    });
+    setDays(last35Days);
+    const logDates = new Set(logs.map(l => l.date));
+    setActiveDates(logDates);
+
+    const startOfWeek = new Date(today);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+
+    const volume = {};
+    logs.filter(l => l.timestamp >= startOfWeek.getTime()).forEach(l => {
+       const muscle = getMuscleById(l.exerciseId, exerciseData);
+       const setsDone = l.setType === 'Normal' ? l.sets : (l.subSets ? l.subSets.length : 1);
+       volume[muscle] = (volume[muscle] || 0) + setsDone;
+    });
+    
+    setWeeklyVolume(Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets));
+  }, [logs, exerciseData]);
+
+  const healthList = Object.values(healthData || {});
+  const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
+  const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
+  const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
+  const sleepHours = Math.floor(avgSleepMins / 60);
+  const sleepMins = avgSleepMins % 60;
+
+  return (
+    <div className="bg-white dark:bg-[#11131a] w-full max-w-md rounded-[36px] p-6 sm:p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
+      <div className="flex justify-between items-center mb-6">
+        <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center"><Activity size={18} className="mr-2 text-indigo-500" /> Insights</h4>
+      </div>
+
+      {healthList.length > 0 && (
+        <div className="mb-8">
+           <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Metrik Kesehatan (Apple Health)</h3>
+           <div className="grid grid-cols-2 gap-3 mb-3">
+             <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-4 rounded-2xl">
+               <Heart size={16} className="text-rose-500 mb-2" />
+               <div className="text-xl font-black text-gray-900 dark:text-white">{avgHr} <span className="text-[10px] font-bold text-gray-500 uppercase">BPM</span></div>
+               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Rata-rata HR</div>
+             </div>
+             <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 p-4 rounded-2xl">
+               <Flame size={16} className="text-orange-500 mb-2" />
+               <div className="text-xl font-black text-gray-900 dark:text-white">{avgCals} <span className="text-[10px] font-bold text-gray-500 uppercase">Kcal</span></div>
+               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Avg Kalori Sesi</div>
+             </div>
+           </div>
+           <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-2xl w-full flex items-center justify-between">
+              <div>
+                 <MoonStar size={16} className="text-indigo-500 mb-2" />
+                 <div className="text-[9px] font-black uppercase text-gray-400">Rata-rata Tidur (7 Hari)</div>
+              </div>
+              <div className="text-xl font-black text-gray-900 dark:text-white text-right">
+                {sleepHours}<span className="text-[10px] font-bold text-gray-500 uppercase mx-1">J</span> 
+                {sleepMins}<span className="text-[10px] font-bold text-gray-500 uppercase ml-1">M</span>
+              </div>
+           </div>
+        </div>
+      )}
+
+      <div className="mb-8">
+        <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Konsistensi Latihan</h3>
+        <div className="grid grid-cols-7 gap-2">
+          {days.map((dayObj, i) => {
+             const dateStr = dayObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+             const isActive = activeDates.has(dateStr);
+             const isToday = dayObj.toDateString() === new Date().toDateString();
+             return (
+               <div 
+                  key={i} title={dateStr}
+                  className={`flex items-center justify-center aspect-square rounded-[8px] sm:rounded-xl transition-all duration-300 text-[10px] font-bold ${isActive ? 'bg-indigo-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)] scale-105' : 'bg-gray-100 dark:bg-[#1a1d27] text-gray-400'} ${isToday && !isActive ? 'border-2 border-indigo-500/50' : ''}`}
+               >
+                  {dayObj.getDate()}
+               </div>
+             )
+          })}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex justify-between items-center mb-4">
+           <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Volume Otot Minggu Ini</h3>
+           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">Target: 10-20 Set</span>
+        </div>
+        {weeklyVolume.length === 0 ? (
+          <p className="text-xs font-medium text-gray-500 italic text-center py-4 bg-gray-50 dark:bg-[#1a1d27] rounded-2xl">Belum ada latihan minggu ini.</p>
+        ) : (
+          <div className="space-y-4">
+            {weeklyVolume.map((item, idx) => {
+              const maxSets = 20; const pct = Math.min(100, (item.sets / maxSets) * 100);
+              let color = "bg-amber-500";
+              if (item.sets >= 10 && item.sets <= 20) color = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
+              else if (item.sets > 20) color = "bg-rose-500";
+              return (
+                <div key={idx} className="relative">
+                  <div className="flex justify-between text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">
+                    <span>{item.muscle}</span><span>{item.sets} Set</span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${pct}%` }}></div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const todaySplit = getTodaySplit();
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
-  const [activeAppTab, setActiveAppTab] = useState('track'); // Navigasi Bawah ('home', 'track', 'stats')
+  const [activeAppTab, setActiveAppTab] = useState('track'); 
   
-  const [logs, setLogs] = useState(() => { const saved = localStorage.getItem('gym_logs_pro'); return saved ? JSON.parse(saved) : []; });
-  const [exerciseData, setExerciseData] = useState(() => { const saved = localStorage.getItem('gym_exercises_pro'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; });
+  const [logs, setLogs] = useState(() => { 
+    try { const saved = localStorage.getItem('gym_logs_pro'); return saved ? JSON.parse(saved) : []; }
+    catch(e) { return []; }
+  });
+  const [exerciseData, setExerciseData] = useState(() => { 
+    try { const saved = localStorage.getItem('gym_exercises_pro'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; }
+    catch(e) { return INITIAL_EXERCISE_DATA; }
+  });
   const [isDarkMode, setIsDarkMode] = useState(() => { const saved = localStorage.getItem('gym_dark_pro'); return saved === 'true'; });
   
-  // Health & Notes States
-  const [healthData, setHealthData] = useState(() => { const saved = localStorage.getItem('gym_health_v2'); return saved ? JSON.parse(saved) : {}; });
+  const [healthData, setHealthData] = useState(() => { 
+    try { const saved = localStorage.getItem('gym_health_v2'); return saved ? JSON.parse(saved) : {}; }
+    catch(e) { return {}; }
+  });
   const [dailyNote, setDailyNote] = useState('');
   
-  // General UI States
   const [restTime, setRestTime] = useState(0); 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle: '', targetSets: '' });
 
-  // AI Logic States
   const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [isRoastLoading, setIsRoastLoading] = useState(false);
@@ -627,8 +827,8 @@ export default function App() {
   const [isImbalanceLoading, setIsImbalanceLoading] = useState(false);
   const [preWorkoutAdvice, setPreWorkoutAdvice] = useState(null);
   const [isPreWorkoutLoading, setIsPreWorkoutLoading] = useState(false);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
 
-  // Persistence Effects
   useEffect(() => { localStorage.setItem('gym_logs_pro', JSON.stringify(logs)); }, [logs]);
   useEffect(() => { localStorage.setItem('gym_exercises_pro', JSON.stringify(exerciseData)); }, [exerciseData]);
   useEffect(() => { localStorage.setItem('gym_health_v2', JSON.stringify(healthData)); }, [healthData]);
@@ -652,7 +852,6 @@ export default function App() {
     localStorage.setItem('gym_notes_v12', JSON.stringify(allNotes));
   };
 
-  // Sync Shortcut Interceptor
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action');
@@ -673,7 +872,6 @@ export default function App() {
     }
   }, []);
 
-  // Timer Logic
   useEffect(() => {
     let timer;
     if (isTimerRunning && restTime > 0) {
@@ -693,7 +891,6 @@ export default function App() {
 
   const addTime = (secs) => { setRestTime(prev => prev + secs); setIsTimerRunning(true); };
 
-  // AI Functions
   const handleGetPreWorkoutBriefing = async () => {
     setIsPreWorkoutLoading(true);
     const recentLogs = logs.slice(0, 15).map(l => {
@@ -753,7 +950,6 @@ export default function App() {
     setAiImbalance(response); setIsImbalanceLoading(false);
   };
 
-  // Data Handlers
   const handleAddLog = (log) => {
     const newLog = { ...log, id: Date.now().toString(), date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }), time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), timestamp: Date.now() };
     setLogs([newLog, ...logs]);
@@ -772,7 +968,6 @@ export default function App() {
   const handleEditExercise = (tab, id, newName, newMuscle, newTargetSets, newVideoId) => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, targetSets: newTargetSets, videoId: newVideoId } : ex) })); };
   const handleUpdateExerciseVideo = (tab, id, videoId) => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).map(ex => ex.id === id ? { ...ex, videoId } : ex) })); };
 
-  // Helpers for Home View
   const todayStr = new Date().toLocaleDateString('id-ID');
   const todaysHealth = healthData[todayStr] || { hr: 0, cals: 0, sleep: 0, spo2: 0 };
   const readinessScore = todaysHealth.sleep > 0 ? Math.min(100, Math.max(10, Math.round(((todaysHealth.sleep / 480) * 100) - (todaysHealth.hr > 100 ? 10 : 0)))) : '--';
@@ -780,15 +975,12 @@ export default function App() {
   return (
     <div className={`min-h-screen font-sans antialiased selection:bg-violet-500/30 ${isDarkMode ? 'dark bg-[#050505] text-white' : 'bg-[#FAFAFA] text-gray-900'} transition-colors duration-500 pb-[env(safe-area-inset-bottom)] relative`}>
       
-      {/* Background Mesh Gradients */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className={`absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full blur-[100px] opacity-30 ${isDarkMode ? 'bg-violet-600/20' : 'bg-violet-300/40'}`}></div>
         <div className={`absolute top-[40%] -left-40 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 ${isDarkMode ? 'bg-fuchsia-600/20' : 'bg-fuchsia-300/40'}`}></div>
       </div>
 
       <div className="relative z-10 pb-28">
-        
-        {/* === GLOBAL HEADER === */}
         <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 px-5 pt-[max(env(safe-area-inset-top),2rem)] pb-5 transition-all">
           <div className="max-w-2xl mx-auto flex justify-between items-center">
             <div className="flex items-center space-x-4">
@@ -815,14 +1007,8 @@ export default function App() {
         </header>
 
         <main className="max-w-2xl mx-auto px-5 pt-8 space-y-8">
-
-          {/* ======================================= */}
-          {/* TAB 1: HOME (DASHBOARD & HEALTH) */}
-          {/* ======================================= */}
           {activeAppTab === 'home' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-              
-              {/* Readiness Score Card */}
               <section className="relative w-full rounded-[32px] bg-gradient-to-br from-[#1c1c1e] to-[#0c0c0e] border border-white/5 p-8 shadow-2xl overflow-hidden">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 blur-3xl"></div>
                 <div className="flex justify-between items-end relative z-10">
@@ -852,7 +1038,6 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Health Metrics Grid 2x2 */}
               <h3 className="text-xs font-black text-gray-400 tracking-widest uppercase mb-4 ml-2 flex items-center">
                  <Activity size={14} className="mr-2"/> Biometrik Terakhir
               </h3>
@@ -890,7 +1075,6 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Pre-Workout Briefing */}
               <div className="mt-8">
                 {!preWorkoutAdvice && !isPreWorkoutLoading ? (
                   <button onClick={handleGetPreWorkoutBriefing} className="w-full bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border border-violet-500/20 hover:border-violet-500/40 text-violet-600 dark:text-violet-400 p-5 rounded-[28px] flex items-center justify-between transition-all active:scale-95 shadow-sm">
@@ -919,18 +1103,14 @@ export default function App() {
             </div>
           )}
 
-          {/* ======================================= */}
-          {/* TAB 2: TRACK (AREA LATIHAN UTAMA) */}
-          {/* ======================================= */}
           {activeAppTab === 'track' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               
-              {/* Track Segmented Control */}
-              <div className="flex p-1.5 bg-white dark:bg-[#11131a] rounded-[22px] relative shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="flex p-1.5 bg-white dark:bg-[#11131a] rounded-[22px] relative shadow-sm border border-gray-100 dark:border-gray-800 overflow-x-auto no-scrollbar">
                 {['Push', 'Pull', 'Legs', 'Upper', 'Legs & Core'].map((t) => (
                   <button 
                     key={t} onClick={() => setActiveTab(t)} 
-                    className={`relative flex-shrink-0 sm:flex-1 min-w-[80px] sm:min-w-0 px-2 py-3 rounded-2xl text-[11px] sm:text-[12px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${activeTab === t ? 'text-white shadow-lg shadow-violet-500/25 bg-gradient-to-r from-violet-500 to-fuchsia-500' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                    className={`relative flex-shrink-0 sm:flex-1 min-w-[80px] sm:min-w-0 px-3 py-3 rounded-2xl text-[11px] sm:text-[12px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${activeTab === t ? 'text-white shadow-lg shadow-violet-500/25 bg-gradient-to-r from-violet-500 to-fuchsia-500' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
                   >
                     {t}
                   </button>
@@ -942,7 +1122,7 @@ export default function App() {
               <div className="space-y-6 mt-4">
                 {(exerciseData[activeTab] || []).map(ex => (
                   <ExerciseCard 
-                    key={ex.id} exercise={ex} activeTab={activeTab} startRestTimer={(secs) => { setRestTime(secs); setIsTimerRunning(true); }}
+                    key={ex.id} exercise={ex} activeTab={activeTab} 
                     onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
                     onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} onUpdateExerciseVideo={handleUpdateExerciseVideo}
                     history={logs.filter(l => l.exerciseId === ex.id)} 
@@ -982,7 +1162,6 @@ export default function App() {
                 </button>
               )}
 
-              {/* Jurnal Harian */}
               <div className="mt-12 bg-amber-50 dark:bg-[#1c1810] border border-amber-200/50 dark:border-amber-900/30 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-6 opacity-10"><BookOpen size={100} className="text-amber-600" /></div>
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-500 mb-4 flex items-center relative z-10"><PenTool size={14} className="mr-2"/> Jurnal Latihan Hari Ini</h4>
@@ -994,13 +1173,9 @@ export default function App() {
             </div>
           )}
 
-          {/* ======================================= */}
-          {/* TAB 3: STATS (AI & ANALYTICS) */}
-          {/* ======================================= */}
           {activeAppTab === 'stats' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
               
-              {/* AI Insight Suite */}
               <div className={`rounded-[32px] p-6 sm:p-8 relative overflow-hidden transition-all duration-700 shadow-xl ${aiBannerData.type === 'roast' ? 'bg-[#1a0b11] border border-rose-900/30' : 'bg-[#0a0f1c] border border-indigo-900/30'}`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] opacity-40 transition-colors duration-700 ${aiBannerData.type === 'roast' ? 'bg-rose-600' : 'bg-indigo-600'}`}></div>
                 <div className="relative z-10">
@@ -1027,7 +1202,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Tools Grid */}
               <div className="grid grid-cols-2 gap-4 mb-8">
                 <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="bg-white dark:bg-[#11131a] border border-gray-100 dark:border-gray-800/80 rounded-[28px] p-6 transition-all flex flex-col items-center justify-center group active:scale-95 shadow-sm hover:shadow-xl hover:border-orange-500/50">
                   <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-4 text-orange-500 group-hover:scale-110 transition-transform">
@@ -1043,7 +1217,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Modal Inline Responses */}
               {aiWarmup && (
                 <div className="bg-white dark:bg-[#11131a] border-2 border-orange-100 dark:border-orange-900/30 p-6 rounded-[28px] animate-in slide-in-from-top-4 relative shadow-xl">
                   <button onClick={() => setAiWarmup(null)} className="absolute top-5 right-5 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 transition-colors"><X size={16} /></button>
@@ -1065,8 +1238,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* --- FLOATING COMPONENTS --- */}
-      
       {/* Floating Timer */}
       {restTime > 0 && !showTimerModal && (
         <button onClick={() => setShowTimerModal(true)} className="fixed bottom-28 right-6 z-40 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3.5 rounded-full shadow-2xl shadow-indigo-500/20 flex items-center gap-3 animate-in slide-in-from-bottom-10 border border-gray-700 dark:border-gray-200 hover:scale-105 transition-transform">
@@ -1077,7 +1248,7 @@ export default function App() {
         </button>
       )}
 
-      {/* Floating Bottom Navigation (Aesthetic Glassmorphism) */}
+      {/* Floating Bottom Navigation */}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/80 dark:bg-[#11131a]/80 backdrop-blur-2xl border border-gray-200/50 dark:border-gray-800/50 rounded-full p-2 flex justify-between shadow-2xl shadow-gray-200/50 dark:shadow-none z-50">
         {[
           { id: 'home', icon: Home, label: 'Home' },
@@ -1095,7 +1266,7 @@ export default function App() {
         ))}
       </nav>
 
-      {/* Modal Kalender & Volume Insights */}
+      {/* Modals */}
       {showInsightsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative animate-in zoom-in-95 duration-300 w-full max-w-md">
@@ -1105,7 +1276,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal Timer Manual */}
       {showTimerModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[36px] p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
@@ -1134,7 +1304,6 @@ export default function App() {
   );
 }
 
-// --- KOMPONEN: INSIGHTS & CALENDAR MODAL ---
 const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
   const [days, setDays] = useState([]);
   const [activeDates, setActiveDates] = useState(new Set());
@@ -1165,7 +1334,7 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
     setWeeklyVolume(Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets));
   }, [logs, exerciseData]);
 
-  const healthList = Object.values(healthData);
+  const healthList = Object.values(healthData || {});
   const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
   const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
   const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
