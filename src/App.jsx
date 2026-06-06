@@ -5,7 +5,7 @@ import {
   RefreshCw, TrendingUp, PlusCircle, Moon, Sun, Flame,
   PlayCircle, Save, Video, Zap, Skull, Scale, ChevronRight, Timer, Trophy, BarChart2, Crown, Play, Pause, Clock,
   Battery, BatteryCharging, BatteryFull, PenTool, BookOpen, MessageSquare, Heart, CheckSquare, MoonStar, Wind,
-  Settings, Grid, Menu, Target, Zap as ZapIcon, Monitor
+  Home, AreaChart, Target, LineChart, CalendarDays, TrendingDown, AlertCircle, HelpCircle
 } from 'lucide-react';
 
 const getYouTubeId = (url) => {
@@ -93,10 +93,10 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   
   if (!apiKey) {
     console.error("API Key not found!");
-    return "API Key configuration incomplete in Vercel.";
+    return "API Key configuration incomplete.";
   }
   
-  const combinedPrompt = isRaw ? prompt : "You are an advanced professional fitness coach. Answer in English, use a professional yet engaging tone. Keep it concise, max 3-5 sentences. Analyze data literally.\n\n" + prompt;
+  const combinedPrompt = isRaw ? prompt : "You are a professional fitness coach. Answer in English, use professional yet encouraging tone. Keep it concise, max 3-5 sentences. Analyze data accurately.\n\n" + prompt;
   
   const modelsToTry = [
     'gemini-3-flash', 'gemini-3.1-flash-lite', 'gemini-3.1-pro', 
@@ -115,49 +115,36 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   return null; 
 };
 
-// ========== CYBERPUNK CARD COMPONENTS ==========
+// ========== MODERN PROFESSIONAL COMPONENTS ==========
 
-const CyberpunkCard = ({ children, className = "", neon = "pink" }) => {
-  const neonClasses = {
-    pink: "border-[#FF006E]/50 shadow-[0_0_20px_rgba(255,0,110,0.3)] hover:shadow-[0_0_40px_rgba(255,0,110,0.5)]",
-    cyan: "border-[#00D9FF]/50 shadow-[0_0_20px_rgba(0,217,255,0.3)] hover:shadow-[0_0_40px_rgba(0,217,255,0.5)]",
-    green: "border-[#39FF14]/50 shadow-[0_0_20px_rgba(57,255,20,0.3)] hover:shadow-[0_0_40px_rgba(57,255,20,0.5)]",
-    purple: "border-[#BB86FC]/50 shadow-[0_0_20px_rgba(187,134,252,0.3)] hover:shadow-[0_0_40px_rgba(187,134,252,0.5)]",
+const Card = ({ children, className = "" }) => (
+  <div className={`
+    bg-white border border-gray-200 rounded-xl p-6 shadow-sm 
+    hover:shadow-md transition-shadow duration-300 ${className}
+  `}>
+    {children}
+  </div>
+);
+
+const Badge = ({ children, variant = "default", size = "md" }) => {
+  const variants = {
+    default: "bg-blue-50 text-blue-700 border-blue-200",
+    success: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    warning: "bg-amber-50 text-amber-700 border-amber-200",
+    danger: "bg-rose-50 text-rose-700 border-rose-200",
   };
-
-  return (
-    <div className={`
-      bg-gradient-to-br from-[#1a0f2e]/80 to-[#16213e]/80 
-      backdrop-blur-xl border ${neonClasses[neon] || neonClasses.pink}
-      rounded-xl p-5 transition-all duration-300
-      ${className}
-    `}>
-      {children}
-    </div>
-  );
-};
-
-const NeonBadge = ({ children, color = "pink", size = "sm" }) => {
-  const colorMap = {
-    pink: "bg-[#FF006E]/20 text-[#FF77B4] border-[#FF006E]/50",
-    cyan: "bg-[#00D9FF]/20 text-[#00FFF0] border-[#00D9FF]/50",
-    green: "bg-[#39FF14]/20 text-[#39FF14] border-[#39FF14]/50",
-    purple: "bg-[#BB86FC]/20 text-[#E0BBE4] border-[#BB86FC]/50",
+  const sizes = {
+    sm: "px-2.5 py-1 text-xs font-medium",
+    md: "px-3 py-1.5 text-sm font-medium",
   };
-
-  const sizeClasses = size === "sm" ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm";
-  
   return (
-    <span className={`
-      border rounded-full font-bold tracking-wider uppercase inline-block
-      ${colorMap[color]} ${sizeClasses}
-    `}>
+    <span className={`inline-flex border rounded-full ${variants[variant]} ${sizes[size]}`}>
       {children}
     </span>
   );
 };
 
-// ========== MUSCLE RECOVERY (REDESIGNED) ==========
+// ========== MUSCLE RECOVERY CARD ==========
 
 const MuscleRecovery = ({ logs, exerciseData }) => {
   const [recoveryData, setRecoveryData] = useState([]);
@@ -187,36 +174,38 @@ const MuscleRecovery = ({ logs, exerciseData }) => {
   if (recoveryData.length === 0) return null;
 
   return (
-    <CyberpunkCard neon="cyan">
-      <h3 className="text-xs font-bold tracking-widest text-[#00FFF0] uppercase mb-4 flex items-center">
-        <Activity size={14} className="mr-2" /> MUSCLE STATUS (72H)
+    <Card>
+      <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+        <Activity size={16} className="mr-2 text-blue-600"/> Muscle Recovery
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {recoveryData.map((item, idx) => {
-          let colorClass = "border-[#39FF14]/70 bg-[#39FF14]/10 text-[#39FF14]";
-          let label = "READY";
+          let badgeVariant = "success";
+          let label = "Ready";
           
           if (item.status === 'tired') {
-             colorClass = "border-[#FF006E]/70 bg-[#FF006E]/10 text-[#FF77B4]";
-             label = "FATIGUED";
+             badgeVariant = "danger";
+             label = "Fatigued";
           } else if (item.status === 'recovering') {
-             colorClass = "border-[#BB86FC]/70 bg-[#BB86FC]/10 text-[#E0BBE4]";
-             label = "RECOVERING";
+             badgeVariant = "warning";
+             label = "Recovering";
           }
 
           return (
-            <div key={idx} className={`border rounded-lg p-3 text-center transition-all hover:scale-105 ${colorClass}`}>
-               <div className="text-xs font-bold leading-tight">{item.muscle}</div>
-               <div className="text-[10px] font-bold tracking-wider mt-1">{label}</div>
+            <div key={idx} className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+               <p className="text-xs font-semibold text-gray-700">{item.muscle}</p>
+               <Badge variant={badgeVariant} size="sm" className="mt-1.5 justify-center w-full">
+                 {label}
+               </Badge>
             </div>
           )
         })}
       </div>
-    </CyberpunkCard>
+    </Card>
   );
 };
 
-// ========== MAIN EXERCISE CARD (COMPLETELY REDESIGNED) ==========
+// ========== EXERCISE CARD (TRACK TAB) ==========
 
 const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, activeTab }) => {
   const [weight, setWeight] = useState('');
@@ -342,24 +331,24 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
     return (
       <div className="pt-4 pb-4 animate-in fade-in h-48 flex gap-3">
-        <div className="flex flex-col justify-between text-[9px] font-bold text-[#BB86FC]/60 pb-5 pt-4 border-r border-[#BB86FC]/20 pr-3">
+        <div className="flex flex-col justify-between text-[9px] font-semibold text-gray-500 pb-5 pt-4 border-r border-gray-200 pr-3">
           <span>{Math.round(upperBound)}</span>
           <span>{Math.round(upperBound / 2)}</span>
           <span>0</span>
         </div>
         <div className="flex-1 relative flex items-end justify-around h-full gap-2">
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-5 pt-4 z-0">
-            <div className="w-full h-px border-t border-dashed border-[#BB86FC]/20"></div>
-            <div className="w-full h-px border-t border-dashed border-[#BB86FC]/20"></div>
-            <div className="w-full h-px border-t border-dashed border-[#BB86FC]/20"></div>
+            <div className="w-full h-px border-t border-dashed border-gray-200"></div>
+            <div className="w-full h-px border-t border-dashed border-gray-200"></div>
+            <div className="w-full h-px border-t border-dashed border-gray-200"></div>
           </div>
           {chartData.map((d, i) => {
             const heightPct = Math.max(1, ((d.oneRepMax || 0) / upperBound) * 100);
             return (
               <div key={i} className="flex flex-col items-center flex-1 h-full justify-end relative z-10">
-                <div className="text-[10px] font-bold text-[#00FFF0] mb-1 z-20">{d.oneRepMax}</div>
-                <div className={`w-full max-w-[24px] rounded-t-md transition-all duration-700 ${d.isPR ? 'bg-gradient-to-t from-[#FF006E] to-[#FF77B4] shadow-[0_0_15px_rgba(255,0,110,0.6)]' : 'bg-gradient-to-t from-[#BB86FC] to-[#E0BBE4]'}`} style={{ height: `${heightPct}%` }}></div>
-                <div className="text-[8px] font-bold text-[#BB86FC]/50 mt-2 truncate w-full text-center">{d.date.split(' ')[0]}</div>
+                <div className="text-[10px] font-bold text-gray-900 mb-1 z-20">{d.oneRepMax}</div>
+                <div className={`w-full max-w-[24px] rounded-t-md transition-all duration-700 ${d.isPR ? 'bg-blue-500 shadow-lg shadow-blue-200' : 'bg-blue-400'}`} style={{ height: `${heightPct}%` }}></div>
+                <div className="text-[8px] font-semibold text-gray-400 mt-2 truncate w-full text-center">{d.date.split(' ')[0]}</div>
               </div>
             );
           })}
@@ -379,113 +368,111 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   });
 
   return (
-    <CyberpunkCard neon="pink">
-      <div className="mb-6">
-        {isEditingEx ? (
-          <div className="space-y-3 mb-2 animate-in fade-in">
-            <input type="text" value={exEditForm.name} onChange={e => setExEditForm({...exEditForm, name: e.target.value})} className="w-full bg-[#16213e]/70 border border-[#BB86FC]/30 rounded-lg px-4 py-3 text-sm font-semibold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 transition-all" placeholder="Exercise Name" />
-            <div className="flex gap-2">
-              <input type="text" value={exEditForm.muscle} onChange={e => setExEditForm({...exEditForm, muscle: e.target.value})} className="w-2/3 bg-[#16213e]/70 border border-[#BB86FC]/30 rounded-lg px-4 py-3 text-xs font-semibold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 transition-all" placeholder="Target Muscle" />
-              <input type="number" value={exEditForm.targetSets} onChange={e => setExEditForm({...exEditForm, targetSets: e.target.value})} className="w-1/3 bg-[#16213e]/70 border border-[#BB86FC]/30 rounded-lg px-4 py-3 text-xs font-semibold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 transition-all" placeholder="Sets" />
+    <Card className="border-l-4 border-l-blue-500">
+      {isEditingEx ? (
+        <div className="space-y-3 mb-2 animate-in fade-in">
+          <input type="text" value={exEditForm.name} onChange={e => setExEditForm({...exEditForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Exercise Name" />
+          <div className="flex gap-2">
+            <input type="text" value={exEditForm.muscle} onChange={e => setExEditForm({...exEditForm, muscle: e.target.value})} className="w-2/3 border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Target Muscle" />
+            <input type="number" value={exEditForm.targetSets} onChange={e => setExEditForm({...exEditForm, targetSets: e.target.value})} className="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Sets" />
+          </div>
+          <input type="text" value={exEditForm.videoUrl} onChange={e => setExEditForm({...exEditForm, videoUrl: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="YouTube Link (Optional)" />
+          <div className="flex space-x-2 pt-2">
+            <button onClick={handleSaveExEdit} className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg"><Save size={14} className="mr-1 inline"/> Save</button>
+            <button onClick={() => setIsEditingEx(false)} className="flex-1 px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded-lg">Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{exercise.name}</h3>
+              <div className="flex gap-2 flex-wrap">
+                <Badge variant="default" size="sm">{exercise.muscle}</Badge>
+                {exercise.targetSets && (
+                  <Badge variant="success" size="sm">Target: {exercise.targetSets}S</Badge>
+                )}
+              </div>
             </div>
-            <input type="text" value={exEditForm.videoUrl} onChange={e => setExEditForm({...exEditForm, videoUrl: e.target.value})} className="w-full bg-[#16213e]/70 border border-[#BB86FC]/30 rounded-lg px-4 py-3 text-xs font-semibold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 transition-all" placeholder="YouTube Link (Optional)" />
-            <div className="flex space-x-2 pt-2">
-              <button onClick={handleSaveExEdit} className="flex-1 px-4 py-2.5 bg-[#39FF14] text-[#1a0f2e] text-xs font-bold rounded-lg hover:bg-[#39FF14]/90 active:scale-95 transition-all"><Save size={14} className="mr-2 inline"/> SAVE</button>
-              <button onClick={() => setIsEditingEx(false)} className="flex-1 px-4 py-2.5 bg-[#BB86FC]/20 border border-[#BB86FC]/50 text-[#E0BBE4] text-xs font-bold rounded-lg active:scale-95 transition-all">CANCEL</button>
+            <div className="flex gap-1">
+              <button onClick={() => {
+                  setExEditForm({ name: exercise.name, muscle: exercise.muscle, targetSets: exercise.targetSets || 3, videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : '' });
+                  setIsEditingEx(true);
+                }} 
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Edit2 size={14} />
+              </button>
+              <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"><Trash2 size={14} /></button>
             </div>
           </div>
-        ) : (
-          <>
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="text-lg font-black text-[#00FFF0] tracking-tight mb-2">{exercise.name}</h3>
-                <div className="flex gap-2 flex-wrap">
-                  <NeonBadge color="cyan" size="sm">{exercise.muscle}</NeonBadge>
-                  {exercise.targetSets && (
-                    <NeonBadge color="purple" size="sm">TARGET: {exercise.targetSets}S</NeonBadge>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-1">
-                <button onClick={() => {
-                    setExEditForm({ name: exercise.name, muscle: exercise.muscle, targetSets: exercise.targetSets || 3, videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : '' });
-                    setIsEditingEx(true);
-                  }} 
-                  className="p-2 text-[#BB86FC] hover:bg-[#BB86FC]/20 rounded-lg transition-all"
-                >
-                  <Edit2 size={14} />
-                </button>
-                <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-[#FF77B4] hover:bg-[#FF006E]/20 rounded-lg transition-all"><Trash2 size={14} /></button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-2 mb-4">
         {exercise.videoId ? (
           <button 
             onClick={(e) => { e.preventDefault(); setShowVideo(!showVideo); setAiTip(null); setAiAlt(null); }}
-            className={`flex flex-col items-center justify-center gap-1 py-3 px-3 rounded-lg transition-all border ${showVideo ? 'bg-[#FF006E]/30 border-[#FF006E]/70 text-[#FF77B4]' : 'bg-[#16213e]/40 border-[#FF006E]/30 text-[#FF77B4] hover:border-[#FF006E]/70'}`} 
+            className={`flex flex-col items-center justify-center gap-1 py-2.5 px-3 rounded-lg transition-all border text-xs font-semibold ${showVideo ? 'bg-rose-100 border-rose-300 text-rose-700' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}`} 
           >
-            <PlayCircle size={16} className={showVideo ? "animate-pulse" : ""} />
-            <span className="text-[8px] font-bold">VIDEO</span>
+            <PlayCircle size={16} />
+            VIDEO
           </button>
         ) : (
           <a 
             href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`}
             target="_blank" rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center gap-1 py-3 px-3 rounded-lg bg-[#16213e]/40 border border-[#FF006E]/30 text-[#FF77B4] hover:border-[#FF006E]/70 transition-all" 
+            className="flex flex-col items-center justify-center gap-1 py-2.5 px-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 transition-all text-xs font-semibold" 
           >
             <PlayCircle size={16} />
-            <span className="text-[8px] font-bold">SEARCH</span>
+            VIDEO
           </a>
         )}
         
-        <button onClick={handleGetAlternative} className="flex flex-col items-center justify-center gap-1 py-3 px-3 rounded-lg bg-[#16213e]/40 border border-[#BB86FC]/30 text-[#E0BBE4] hover:border-[#BB86FC]/70 transition-all">
+        <button onClick={handleGetAlternative} className="flex flex-col items-center justify-center gap-1 py-2.5 px-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 transition-all text-xs font-semibold">
           {isAiAltLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
-          <span className="text-[8px] font-bold">ALT</span>
+          ALT
         </button>
         
-        <button onClick={handleGetTip} className="flex flex-col items-center justify-center gap-1 py-3 px-3 rounded-lg bg-[#39FF14]/20 border border-[#39FF14]/70 text-[#39FF14] hover:bg-[#39FF14]/30 transition-all">
+        <button onClick={handleGetTip} className="flex flex-col items-center justify-center gap-1 py-2.5 px-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-all text-xs font-semibold">
           {isAiTipLoading ? <Loader2 size={16} className="animate-spin" /> : <Bot size={16} />}
-          <span className="text-[8px] font-bold">AI TIP</span>
+          AI TIP
         </button>
       </div>
 
       {showVideo && exercise.videoId && (
-        <div className="rounded-lg overflow-hidden bg-black mb-4 border border-[#FF006E]/30 shadow-[0_0_20px_rgba(255,0,110,0.3)] relative aspect-video animate-in zoom-in-95">
+        <div className="rounded-lg overflow-hidden bg-black mb-4 border border-gray-200 relative aspect-video animate-in zoom-in-95">
           <iframe className="absolute inset-0 w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0&modestbranding=1`} title="Tutorial" allowFullScreen></iframe>
         </div>
       )}
 
       {aiTip && (
-        <div className="bg-[#39FF14]/10 border border-[#39FF14]/50 p-4 rounded-lg mb-4 animate-in slide-in-from-top-2 flex items-start">
-          <Sparkles size={16} className="text-[#39FF14] mr-3 shrink-0 mt-0.5" />
-          <p className="text-xs text-[#39FF14] font-medium leading-relaxed">{aiTip}</p>
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-3 animate-in slide-in-from-top-2 flex items-start gap-2">
+          <Sparkles size={14} className="text-blue-600 mt-0.5 shrink-0" />
+          <p className="text-xs text-blue-900 font-medium leading-relaxed">{aiTip}</p>
         </div>
       )}
 
       {aiAlt && (
-        <div className="bg-[#BB86FC]/10 border border-[#BB86FC]/50 p-4 rounded-lg mb-4 animate-in slide-in-from-top-2 flex items-start">
-          <RefreshCw size={16} className="text-[#E0BBE4] mr-3 shrink-0 mt-0.5" />
-          <p className="text-xs text-[#E0BBE4] font-medium leading-relaxed">{aiAlt}</p>
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mb-3 animate-in slide-in-from-top-2 flex items-start gap-2">
+          <RefreshCw size={14} className="text-amber-600 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-900 font-medium leading-relaxed">{aiAlt}</p>
         </div>
       )}
 
       {aiProgress && (
-        <div className="bg-[#00D9FF]/10 border border-[#00D9FF]/50 p-4 rounded-lg mb-4 animate-in slide-in-from-top-2 flex items-start">
-          <TrendingUp size={16} className="text-[#00FFF0] mr-3 shrink-0 mt-0.5" />
-          <p className="text-xs text-[#00FFF0] font-medium leading-relaxed">{aiProgress}</p>
+        <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg mb-3 animate-in slide-in-from-top-2 flex items-start gap-2">
+          <TrendingUp size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+          <p className="text-xs text-emerald-900 font-medium leading-relaxed">{aiProgress}</p>
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-[#16213e]/50 rounded-lg border border-[#BB86FC]/20">
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex gap-1 mb-3 overflow-x-auto pb-1">
           {['Normal', 'Drop Set', 'Superset'].map(type => (
             <button 
               key={type} type="button" onClick={() => handleSetTypeChange(type)}
-              className={`px-3 py-1.5 rounded text-[10px] font-bold tracking-widest whitespace-nowrap transition-all ${setType === type ? 'bg-[#FF006E] text-white shadow-[0_0_15px_rgba(255,0,110,0.5)]' : 'bg-[#16213e] border border-[#BB86FC]/30 text-[#E0BBE4] hover:border-[#BB86FC]/70'}`}
+              className={`px-3 py-1.5 rounded text-xs font-semibold tracking-wider whitespace-nowrap transition-all ${setType === type ? 'bg-blue-600 text-white shadow-md' : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400'}`}
             >
               {type}
             </button>
@@ -493,11 +480,11 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
         </div>
 
         {setType !== 'Normal' && tempSubSets.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3 p-2 bg-[#1a0f2e]/70 rounded-lg border border-dashed border-[#BB86FC]/30">
+          <div className="flex flex-wrap gap-2 mb-3 p-2 bg-white rounded-lg border border-gray-200">
             {tempSubSets.map((s, i) => (
-              <div key={i} className="text-xs font-bold bg-[#BB86FC]/20 text-[#E0BBE4] px-2 py-1 rounded flex items-center border border-[#BB86FC]/50">
-                {s.weight}kg×{s.reps} {s.rpe && <span className="ml-1 opacity-60">RPE:{s.rpe}</span>}
-                <button type="button" onClick={() => setTempSubSets(tempSubSets.filter((_, idx) => idx !== i))} className="ml-2 text-[#FF77B4] hover:text-[#FF006E]"><X size={12}/></button>
+              <div key={i} className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-1 rounded flex items-center border border-blue-200">
+                {s.weight}kg×{s.reps} {s.rpe && <span className="ml-1 opacity-70">RPE:{s.rpe}</span>}
+                <button type="button" onClick={() => setTempSubSets(tempSubSets.filter((_, idx) => idx !== i))} className="ml-2 text-blue-500 hover:text-blue-700"><X size={12}/></button>
               </div>
             ))}
           </div>
@@ -505,25 +492,25 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
         <form onSubmit={onFormSubmit} className="flex flex-col gap-3">
           <div className={`grid gap-2 ${setType === 'Normal' ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-[#1a0f2e] border border-[#39FF14]/50 rounded-lg px-3 py-2.5 text-xs font-bold text-[#39FF14] outline-none focus:ring-2 focus:ring-[#39FF14]/50 appearance-none placeholder-[#39FF14]/30" placeholder="KG" />
+            <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 appearance-none placeholder-gray-500" placeholder="KG" />
             {setType === 'Normal' && (
-              <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="bg-[#1a0f2e] border border-[#00D9FF]/50 rounded-lg px-3 py-2.5 text-xs font-bold text-[#00FFF0] outline-none focus:ring-2 focus:ring-[#00D9FF]/50 appearance-none placeholder-[#00D9FF]/30" placeholder="SET" />
+              <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 appearance-none placeholder-gray-500" placeholder="SET" />
             )}
-            <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="bg-[#1a0f2e] border border-[#FF006E]/50 rounded-lg px-3 py-2.5 text-xs font-bold text-[#FF77B4] outline-none focus:ring-2 focus:ring-[#FF006E]/50 appearance-none placeholder-[#FF006E]/30" placeholder="REP" />
-            <input type="number" min="1" max="10" value={rpe} onChange={(e) => setRpe(e.target.value)} className="bg-[#1a0f2e] border border-[#BB86FC]/50 rounded-lg px-3 py-2.5 text-xs font-bold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 appearance-none placeholder-[#BB86FC]/30" placeholder="RPE" />
+            <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 appearance-none placeholder-gray-500" placeholder="REP" />
+            <input type="number" min="1" max="10" value={rpe} onChange={(e) => setRpe(e.target.value)} className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 appearance-none placeholder-gray-500" placeholder="RPE" />
           </div>
           
           {setType === 'Normal' ? (
-            <button type="submit" disabled={!weight || !sets || !reps} className={`py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-[#39FF14] text-[#1a0f2e] shadow-[0_0_20px_rgba(57,255,20,0.5)]' : 'bg-[#FF006E] text-white disabled:opacity-30 hover:bg-[#FF0050] shadow-[0_0_20px_rgba(255,0,110,0.3)]'}`}>
-              {showSuccess ? <CheckCircle size={16} /> : 'LOG IT'}
+            <button type="submit" disabled={!weight || !sets || !reps} className={`py-2.5 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-emerald-600 text-white shadow-md' : 'bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-700'}`}>
+              {showSuccess ? <CheckCircle size={16} className="mr-1" /> : ''}LOG SET
             </button>
           ) : (
             <div className="flex gap-2">
-               <button type="submit" disabled={!weight || !reps} className="flex-1 py-3 px-3 rounded-lg text-xs font-bold tracking-widest uppercase bg-[#16213e] border border-[#BB86FC]/30 text-[#E0BBE4] hover:border-[#BB86FC]/70 active:scale-95 transition-all disabled:opacity-50">
-                 ADD
+               <button type="submit" disabled={!weight || !reps} className="flex-1 py-2.5 px-3 rounded-lg text-xs font-semibold tracking-wide uppercase bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95 transition-all disabled:opacity-50">
+                 Add
                </button>
-               <button type="button" onClick={handleSubmit} disabled={tempSubSets.length === 0} className={`flex-1 py-3 rounded-lg text-xs font-bold tracking-widest uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-[#39FF14] text-[#1a0f2e]' : 'bg-[#FF006E] text-white disabled:opacity-30 hover:bg-[#FF0050]'}`}>
-                 {showSuccess ? <CheckCircle size={16} /> : 'SAVE'}
+               <button type="button" onClick={handleSubmit} disabled={tempSubSets.length === 0} className={`flex-1 py-2.5 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-700'}`}>
+                 {showSuccess ? <CheckCircle size={16} className="mr-1" /> : ''}Save
                </button>
             </div>
           )}
@@ -532,21 +519,21 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
       {history.length > 0 && (
         <div className="mt-4">
-          <div className="flex justify-between items-center px-1 mb-4 gap-2 flex-wrap">
-            <div className="flex gap-1 bg-[#16213e]/50 p-1 rounded-lg">
-              <button onClick={() => { setShowHistory(true); setHistoryTab('list'); }} className={`px-3 py-1.5 rounded text-[10px] font-bold tracking-widest transition-all ${showHistory && historyTab === 'list' ? 'bg-[#00D9FF]/30 border border-[#00D9FF]/70 text-[#00FFF0]' : 'text-[#BB86FC]/60 hover:text-[#E0BBE4]'}`}>LIST</button>
-              <button onClick={() => { setShowHistory(true); setHistoryTab('chart'); }} className={`flex items-center px-3 py-1.5 rounded text-[10px] font-bold tracking-widest transition-all ${showHistory && historyTab === 'chart' ? 'bg-[#BB86FC]/30 border border-[#BB86FC]/70 text-[#E0BBE4]' : 'text-[#BB86FC]/60 hover:text-[#E0BBE4]'}`}>
-                <BarChart2 size={11} className="mr-1"/> CHART
+          <div className="flex justify-between items-center px-1 mb-3 gap-2 flex-wrap">
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+              <button onClick={() => { setShowHistory(true); setHistoryTab('list'); }} className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${showHistory && historyTab === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>LIST</button>
+              <button onClick={() => { setShowHistory(true); setHistoryTab('chart'); }} className={`flex items-center px-3 py-1.5 rounded text-xs font-semibold transition-all ${showHistory && historyTab === 'chart' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                <BarChart2 size={12} className="mr-1"/> CHART
               </button>
             </div>
-            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-[10px] font-bold tracking-widest uppercase text-[#39FF14] hover:bg-[#39FF14]/20 px-3 py-1.5 rounded-lg flex items-center active:scale-95 border border-[#39FF14]/50">
-              {isAiProgressLoading ? <Loader2 size={12} className="animate-spin mr-1.5" /> : <ZapIcon size={12} className="mr-1.5" />} 
+            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-xs font-semibold tracking-wide uppercase text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg flex items-center active:scale-95 border border-blue-200">
+              {isAiProgressLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Zap size={12} className="mr-1" />} 
               ANALYZE
             </button>
           </div>
 
           {showHistory && (
-            <div className="animate-in slide-in-from-top-2 duration-300 bg-[#16213e]/40 p-3 rounded-lg border border-[#BB86FC]/20">
+            <div className="animate-in slide-in-from-top-2 duration-300 bg-gray-50 p-3 rounded-lg border border-gray-200">
               {historyTab === 'chart' ? (
                 <ChartView />
               ) : (
@@ -554,59 +541,59 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
                   {groupedHistory.map((group, gIndex) => (
                     <div key={gIndex} className="space-y-2">
                       <div className="flex items-center gap-3 px-1 py-1">
-                        <div className="h-px bg-[#BB86FC]/20 flex-1"></div>
-                        <span className="text-[9px] font-bold tracking-widest text-[#BB86FC] bg-[#BB86FC]/10 px-2 py-0.5 rounded-full border border-[#BB86FC]/30">{group.date}</span>
-                        <div className="h-px bg-[#BB86FC]/20 flex-1"></div>
+                        <div className="h-px bg-gray-300 flex-1"></div>
+                        <span className="text-[9px] font-semibold tracking-widest text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">{group.date}</span>
+                        <div className="h-px bg-gray-300 flex-1"></div>
                       </div>
                       
                       {group.logs.map((log) => (
                         <div key={log.id}>
                           {editingId === log.id ? (
-                            <div className="bg-[#16213e]/60 p-3 rounded-lg border border-[#BB86FC]/30">
+                            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                               <div className="flex gap-2 mb-2">
-                                 <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="flex-1 bg-[#1a0f2e] border border-[#39FF14]/50 rounded px-2 py-2 text-xs font-bold text-[#39FF14] outline-none focus:ring-2 focus:ring-[#39FF14]/50 appearance-none" />
-                                 <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="flex-1 bg-[#1a0f2e] border border-[#00D9FF]/50 rounded px-2 py-2 text-xs font-bold text-[#00FFF0] outline-none focus:ring-2 focus:ring-[#00D9FF]/50 appearance-none" />
-                                 <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="flex-1 bg-[#1a0f2e] border border-[#FF006E]/50 rounded px-2 py-2 text-xs font-bold text-[#FF77B4] outline-none focus:ring-2 focus:ring-[#FF006E]/50 appearance-none" />
+                                 <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="flex-1 bg-gray-50 border border-gray-300 rounded px-2 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none" />
+                                 <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="flex-1 bg-gray-50 border border-gray-300 rounded px-2 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none" />
+                                 <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="flex-1 bg-gray-50 border border-gray-300 rounded px-2 py-2 text-xs font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none" />
                               </div>
                               <div className="flex justify-end gap-2">
-                                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded text-xs font-bold text-[#BB86FC] hover:bg-[#BB86FC]/20 active:scale-95 transition-all">CANCEL</button>
-                                <button onClick={() => saveEdit(log.id)} className="px-3 py-1.5 rounded text-xs font-bold bg-[#39FF14]/20 text-[#39FF14] border border-[#39FF14]/50 hover:bg-[#39FF14]/30 active:scale-95 transition-all">SAVE</button>
+                                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded text-xs font-semibold text-gray-600 hover:bg-gray-100">Cancel</button>
+                                <button onClick={() => saveEdit(log.id)} className="px-3 py-1.5 rounded text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700">Save</button>
                               </div>
                             </div>
                           ) : (
-                            <div className={`flex justify-between items-start bg-[#16213e]/40 border rounded-lg p-3 transition-all hover:border-[#FF006E]/50 ${log.isPR ? 'border-[#FF006E]/70 shadow-[0_0_15px_rgba(255,0,110,0.3)]' : 'border-[#BB86FC]/20'}`}>
+                            <div className={`flex justify-between items-start bg-white border rounded-lg p-3 transition-all hover:border-gray-300 ${log.isPR ? 'border-blue-300 shadow-sm shadow-blue-200' : 'border-gray-200'}`}>
                               <div className="flex-1 min-w-0">
-                                <div className="font-bold text-[#00FFF0] text-xs mb-2 flex items-center flex-wrap gap-1">
-                                  {log.isPR && <Crown size={12} className="text-[#FF006E]" />}
+                                <div className="font-semibold text-gray-900 text-sm mb-1 flex items-center flex-wrap gap-1">
+                                  {log.isPR && <Crown size={14} className="text-blue-600" />}
                                   {log.subSets ? (
                                     log.subSets.map((sub, i) => (
                                       <React.Fragment key={i}>
-                                        <span>{sub.weight}kg×{sub.reps} {sub.rpe && <span className="text-[9px] text-[#BB86FC]/60">RPE:{sub.rpe}</span>}</span>
-                                        {i < log.subSets.length - 1 && <span className="text-[#39FF14] text-[10px]">→</span>}
+                                        <span className="text-sm">{sub.weight}kg×{sub.reps} {sub.rpe && <span className="text-xs text-gray-500">RPE:{sub.rpe}</span>}</span>
+                                        {i < log.subSets.length - 1 && <span className="text-gray-400">→</span>}
                                       </React.Fragment>
                                     ))
                                   ) : (
-                                    <span>{log.weight}kg×{log.sets}×{log.reps}</span>
+                                    <span className="text-sm">{log.weight}kg×{log.sets}×{log.reps}</span>
                                   )}
                                 </div>
-                                <div className="text-[9px] text-[#BB86FC]/60 flex items-center gap-2 flex-wrap">
-                                  <Clock size={10} className="opacity-70"/> {log.time}
+                                <div className="text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+                                  <Clock size={11} className="opacity-70"/> {log.time}
                                   {log.rpe && <span>RPE:{log.rpe}</span>}
                                   {log.setType && log.setType !== 'Normal' && (
-                                    <span className="text-[8px] bg-[#16213e] text-[#BB86FC] px-1.5 py-0.5 rounded border border-[#BB86FC]/30">
+                                    <span className="text-[8px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded border border-gray-200">
                                       {log.setType}
                                     </span>
                                   )}
-                                  <span className="text-[8px] bg-[#BB86FC]/20 text-[#E0BBE4] px-1.5 py-0.5 rounded border border-[#BB86FC]/50 ml-auto">
+                                  <span className="text-xs font-semibold text-blue-600 ml-auto">
                                     1RM: {log.oneRepMax}
                                   </span>
                                 </div>
                               </div>
                               <div className="flex gap-1 ml-2">
                                 {!log.subSets && (
-                                  <button onClick={() => startEdit(log)} className="p-2 text-[#BB86FC] hover:bg-[#BB86FC]/20 rounded transition-all"><Edit2 size={12} /></button>
+                                  <button onClick={() => startEdit(log)} className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"><Edit2 size={12} /></button>
                                 )}
-                                <button onClick={() => onDeleteLog(log.id)} className="p-2 text-[#FF77B4] hover:bg-[#FF006E]/20 rounded transition-all"><Trash2 size={12} /></button>
+                                <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"><Trash2 size={12} /></button>
                               </div>
                             </div>
                           )}
@@ -622,19 +609,18 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
       )}
 
       {prModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-gradient-to-b from-[#FF006E] to-[#BB86FC] p-1 rounded-2xl shadow-2xl animate-in zoom-in-95 bounce">
-            <div className="bg-[#1a0f2e] w-full max-w-sm rounded-2xl p-8 text-center relative overflow-hidden">
-              <div className="w-16 h-16 bg-[#FF006E]/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#FF006E]">
-                <Crown size={28} className="text-[#FF006E]" />
-              </div>
-              <h4 className="text-2xl font-black text-[#FF77B4] mb-2">NEW PR!</h4>
-              <p className="text-xs text-[#BB86FC] font-medium leading-relaxed">INSANE! Your {exercise.name} just broke your all-time record. KEEP IT UP!</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white w-full max-w-sm rounded-2xl p-8 shadow-2xl text-center relative overflow-hidden border border-gray-200">
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-100 rounded-full opacity-40"></div>
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-blue-500 relative z-10">
+              <Trophy size={28} className="text-blue-600" />
             </div>
+            <h4 className="text-2xl font-bold text-gray-900 mb-2">NEW PR!</h4>
+            <p className="text-sm text-gray-600 font-medium leading-relaxed">Amazing! Your {exercise.name} just hit a new personal record. Keep up this momentum!</p>
           </div>
         </div>
       )}
-    </CyberpunkCard>
+    </Card>
   );
 };
 
@@ -642,8 +628,8 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
 
 export default function App() {
   const todaySplit = getTodaySplit();
-  const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Cyberpunk = always dark
+  const [activeTab, setActiveTab] = useState('home');
+  const [activeWorkoutTab, setActiveWorkoutTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
   
   const [logs, setLogs] = useState(() => { const saved = localStorage.getItem('gym_logs_v11'); return saved ? JSON.parse(saved) : []; });
   const [exerciseData, setExerciseData] = useState(() => { const saved = localStorage.getItem('gym_exercises_v11'); return saved ? JSON.parse(saved) : INITIAL_EXERCISE_DATA; });
@@ -654,16 +640,8 @@ export default function App() {
   const [restTime, setRestTime] = useState(0); 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showTimerModal, setShowTimerModal] = useState(false);
-  const [showInsightsModal, setShowInsightsModal] = useState(false);
-  const [preWorkoutAdvice, setPreWorkoutAdvice] = useState(null);
-  const [isPreWorkoutLoading, setIsPreWorkoutLoading] = useState(false);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
-
-  useEffect(() => {
-    localStorage.setItem('gym_dark_pro', isDarkMode);
-    document.documentElement.classList.add('dark');
-  }, [isDarkMode]);
 
   useEffect(() => {
     const today = new Date().toLocaleDateString('id-ID');
@@ -692,7 +670,6 @@ export default function App() {
       else spo2 = Math.round(spo2);
       
       const today = new Date().toLocaleDateString('id-ID');
-      
       setHealthData(prev => ({
          ...prev,
          [today]: { ...prev[today], hr, cals, sleep, spo2 }
@@ -721,15 +698,13 @@ export default function App() {
     if (!healthMetrics.cals && !healthMetrics.hr && !healthMetrics.sleep && !healthMetrics.spo2) return;
     
     const today = new Date().toLocaleDateString('id-ID');
-    const newHealthData = { ...healthData, [today]: {
+    setHealthData({...healthData, [today]: {
        duration: parseInt(healthMetrics.duration) || 0,
        cals: parseInt(healthMetrics.cals) || 0,
        hr: parseInt(healthMetrics.hr) || 0,
        sleep: parseInt(healthMetrics.sleep) || 0,
        spo2: parseInt(healthMetrics.spo2) || 0,
-    }};
-    
-    setHealthData(newHealthData);
+    }});
     setShowEndSessionModal(false);
     setHealthMetrics({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
   };
@@ -746,7 +721,7 @@ export default function App() {
         osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
         osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.5);
       } catch (e) {}
-      setConfirmDialog({ message: "Rest time is up! Ready for the next set? 🔥", onConfirm: () => setConfirmDialog(null), isAlert: true });
+      setConfirmDialog({ message: "Rest time is up! Ready for the next set?", onConfirm: () => setConfirmDialog(null), isAlert: true });
     }
     return () => clearInterval(timer);
   }, [isTimerRunning, restTime]);
@@ -756,9 +731,8 @@ export default function App() {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [newExercise, setNewExercise] = useState({ name: '', muscle: '', targetSets: '' });
 
-  const [aiBannerData, setAiBannerData] = useState({ text: null, type: null }); 
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
-  const [isRoastLoading, setIsRoastLoading] = useState(false);
+  const [preWorkoutAdvice, setPreWorkoutAdvice] = useState(null);
+  const [isPreWorkoutLoading, setIsPreWorkoutLoading] = useState(false);
   const [aiWarmup, setAiWarmup] = useState(null);
   const [isWarmupLoading, setIsWarmupLoading] = useState(false);
 
@@ -766,7 +740,7 @@ export default function App() {
     setIsPreWorkoutLoading(true);
     
     const recentLogs = logs.slice(0, 15).map(l => {
-      const exName = (exerciseData[activeTab] || Object.values(exerciseData).flat()).find(e => e.id === l.exerciseId)?.name || l.exerciseId;
+      const exName = (exerciseData[activeWorkoutTab] || Object.values(exerciseData).flat()).find(e => e.id === l.exerciseId)?.name || l.exerciseId;
       return `${exName}: ${l.weight}kg x ${l.reps}`;
     }).join(', ');
     
@@ -777,46 +751,19 @@ export default function App() {
     const todayHealth = healthData[today] || Object.values(healthData).pop() || {};
     const sleepInfo = todayHealth.sleep ? `\nLast night I slept ${Math.floor(todayHealth.sleep/60)}h ${todayHealth.sleep%60}m.` : '';
 
-    const prompt = `I'm starting ${activeTab} day workout. Recent notes: [${recentNotesStr || 'No specific notes'}]. Recent lifts: [${recentLogs || 'No data'}]. ${sleepInfo} \n\nAs a pro coach, give a brief "Pre-Workout Briefing" (max 3 sentences). Analyze my condition/mood and sleep quality, then suggest strategy, intensity, or mental focus for ${activeTab} today.`;
+    const prompt = `I'm starting ${activeWorkoutTab} day. Recent notes: [${recentNotesStr || 'No specific notes'}]. Recent lifts: [${recentLogs || 'No data'}]. ${sleepInfo} \n\nAs a pro coach, give a brief "Pre-Workout Briefing" (max 3 sentences). Analyze my condition/mood and sleep quality, then suggest strategy, intensity, or mental focus for ${activeWorkoutTab} today.`;
 
     const response = await callGeminiAPI(prompt);
-    setPreWorkoutAdvice(response || "Failed to connect with AI. Try again.");
+    setPreWorkoutAdvice(response || "Failed to connect with AI.");
     setIsPreWorkoutLoading(false);
-  };
-
-  const handleGenerateSummary = async () => {
-    if (logs.length === 0) return;
-    setIsSummaryLoading(true);
-    
-    const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
-    
-    const today = new Date().toLocaleDateString('id-ID');
-    const todayHealth = healthData[today] || {};
-    let healthContext = '';
-    if (todayHealth.cals || todayHealth.hr) {
-      healthContext = `\nSmartband metrics: Burned ${todayHealth.cals || 0} kcal, avg heart rate ${todayHealth.hr || 0} BPM.`;
-    }
-
-    const prompt = `I just trained: ${workoutData}. ${healthContext} \nGive praise and analytical evaluation like a pro coach. Comment on HR/calorie metrics if available.`;
-    
-    const response = await callGeminiAPI(prompt);
-    setAiBannerData({ text: response, type: 'summary' }); setIsSummaryLoading(false);
-  };
-
-  const handleGenerateRoast = async () => {
-    if (logs.length === 0) return;
-    setIsRoastLoading(true);
-    const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
-    const prompt = `You're a hardcore coach (like David Goggins). 'Roast' this workout volume: ${workoutData}. Sarcastic, spicy, max 3 sentences!`;
-    const response = await callGeminiAPI(prompt, true);
-    setAiBannerData({ text: response, type: 'roast' }); setIsRoastLoading(false);
   };
 
   const handleGenerateWarmup = async () => {
     setIsWarmupLoading(true);
-    const muscles = (exerciseData[activeTab] || []).map(e => e.muscle).join(', ');
-    const response = await callGeminiAPI(`${activeTab} day (muscles: ${muscles}). Give 3 scientific dynamic warmup moves.`);
-    setAiWarmup(response); setIsWarmupLoading(false);
+    const muscles = (exerciseData[activeWorkoutTab] || []).map(e => e.muscle).join(', ');
+    const response = await callGeminiAPI(`${activeWorkoutTab} day (muscles: ${muscles}). Give 3 scientific dynamic warmup moves.`);
+    setAiWarmup(response);
+    setIsWarmupLoading(false);
   };
 
   const handleAddLog = async (log) => {
@@ -829,345 +776,435 @@ export default function App() {
   };
 
   const onDeleteLog = (id) => { 
-    setConfirmDialog({ message: "Delete this log permanently?", onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }});
+    setConfirmDialog({ message: "Delete this log?", onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }});
   };
 
   const handleEditLog = async (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
   
   const handleSaveCustom = async (e) => {
-    e.preventDefault(); if (!newExercise.name) return;
+    e.preventDefault(); 
+    if (!newExercise.name) return;
     const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'General', targetSets: newExercise.targetSets ? parseInt(newExercise.targetSets) : 3, videoId: null };
-    setExerciseData(prev => ({ ...prev, [activeTab]: [...(prev[activeTab] || []), item] }));
-    setIsAddingExercise(false); setNewExercise({ name: '', muscle: '', targetSets: '' });
+    setExerciseData(prev => ({ ...prev, [activeWorkoutTab]: [...(prev[activeWorkoutTab] || []), item] }));
+    setIsAddingExercise(false); 
+    setNewExercise({ name: '', muscle: '', targetSets: '' });
   };
   
   const handleDeleteExercise = (tab, id) => { 
-    setConfirmDialog({ message: "Delete this exercise from your routine permanently?", onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }});
+    setConfirmDialog({ message: "Delete this exercise from your routine?", onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }});
   };
   
   const handleEditExercise = async (tab, id, newName, newMuscle, newTargetSets, newVideoId) => { 
     setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, targetSets: newTargetSets, videoId: newVideoId } : ex) })); 
   };
 
-  return (
-    <div className="min-h-screen dark bg-gradient-to-b from-[#0a0a0a] via-[#1a0f2e] to-[#16213e] text-white selection:bg-[#FF006E]/30 overflow-x-hidden pb-24">
-      
-      {/* CYBERPUNK BACKGROUND EFFECTS */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl opacity-30 bg-[#FF006E]/40"></div>
-        <div className="absolute top-1/3 -left-20 w-72 h-72 rounded-full blur-3xl opacity-20 bg-[#00D9FF]/30"></div>
-        <div className="absolute bottom-0 right-1/3 w-96 h-96 rounded-full blur-3xl opacity-20 bg-[#BB86FC]/30"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent pointer-events-none"></div>
+  // ========== TAB 1: HOME (Dashboard & AI Briefing) ==========
+  const renderHome = () => (
+    <div className="space-y-6 pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold">GymTracker</h1>
+          <div className="text-sm font-semibold opacity-90">{getHariIndonesia()}</div>
+        </div>
+        <p className="text-blue-100 text-sm">{todaySplit === 'Rest' ? 'Rest Day - Recovery & Mobility' : `Today: ${todaySplit} Day`}</p>
       </div>
 
-      <div className="relative z-10">
-        {/* ===== HEADER ===== */}
-        <header className="sticky top-0 z-40 border-b border-[#FF006E]/20 backdrop-blur-2xl px-4 sm:px-6 pt-4 pb-6 transition-all">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-start sm:items-center mb-6 gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#FF006E] to-[#BB86FC] rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(255,0,110,0.5)]">
-                    <Dumbbell size={24} className="text-white transform -rotate-45" />
-                  </div>
-                  <h1 className="text-3xl font-black text-[#00FFF0] tracking-tighter">GYMTK</h1>
-                </div>
-                <p className="text-xs font-bold tracking-widest text-[#39FF14] flex items-center">
-                  {getHariIndonesia().toUpperCase()} <span className="mx-2 text-[#BB86FC]">•</span> {todaySplit.toUpperCase()} MODE
-                </p>
-              </div>
-              
-              <div className="flex gap-2">
-                <button onClick={() => setShowTimerModal(true)} className="p-3 rounded-lg bg-[#16213e]/50 border border-[#00D9FF]/30 text-[#00FFF0] hover:border-[#00D9FF]/70 hover:bg-[#00D9FF]/20 transition-all relative" title="Rest Timer">
-                  <Clock size={18} />
-                  {restTime > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#FF006E] rounded-full animate-pulse"></span>}
-                </button>
-                <button onClick={() => setShowInsightsModal(true)} className="p-3 rounded-lg bg-[#16213e]/50 border border-[#BB86FC]/30 text-[#E0BBE4] hover:border-[#BB86FC]/70 hover:bg-[#BB86FC]/20 transition-all" title="Insights">
-                  <Activity size={18} />
-                </button>
-              </div>
-            </div>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="!p-4 text-center">
+          <div className="text-2xl font-bold text-blue-600">{logs.length}</div>
+          <div className="text-xs text-gray-600 mt-1">Total Sets</div>
+        </Card>
+        <Card className="!p-4 text-center">
+          <div className="text-2xl font-bold text-emerald-600">{new Set(logs.map(l => l.date)).size}</div>
+          <div className="text-xs text-gray-600 mt-1">Training Days</div>
+        </Card>
+        <Card className="!p-4 text-center">
+          <div className="text-2xl font-bold text-purple-600">{Object.keys(healthData).length}</div>
+          <div className="text-xs text-gray-600 mt-1">Health Logs</div>
+        </Card>
+        <Card className="!p-4 text-center">
+          <div className="text-2xl font-bold text-orange-600">{Math.max(...logs.map(l => l.oneRepMax || 0), 0).toFixed(0)}</div>
+          <div className="text-xs text-gray-600 mt-1">Max 1RM</div>
+        </Card>
+      </div>
 
-            {/* SPLIT TABS */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {['Push', 'Pull', 'Legs', 'Upper', 'Legs & Core'].map((t) => (
-                <button 
-                  key={t} onClick={() => setActiveTab(t)} 
-                  className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-xs font-black tracking-widest transition-all duration-300 border ${activeTab === t ? 'bg-gradient-to-r from-[#FF006E] to-[#BB86FC] text-white border-[#FF006E] shadow-[0_0_20px_rgba(255,0,110,0.5)]' : 'bg-[#16213e]/40 text-[#BB86FC] border-[#BB86FC]/30 hover:border-[#BB86FC]/70'}`}
-                >
-                  {t.toUpperCase()}
-                </button>
-              ))}
+      {/* Muscle Recovery */}
+      <MuscleRecovery logs={logs} exerciseData={exerciseData} />
+
+      {/* AI Pre-Workout Briefing */}
+      {!preWorkoutAdvice && !isPreWorkoutLoading ? (
+        <button onClick={handleGetPreWorkoutBriefing} className="w-full bg-blue-50 border-2 border-blue-200 hover:border-blue-400 text-blue-700 p-4 rounded-xl flex items-center justify-between transition-all active:scale-95">
+          <div className="flex items-center gap-3">
+            <MessageSquare size={18} />
+            <span className="font-semibold">Get Pre-Workout Briefing</span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
+      ) : isPreWorkoutLoading ? (
+        <Card className="!bg-blue-50 border-2 border-blue-200">
+          <div className="flex items-center justify-center h-16">
+            <Loader2 size={18} className="animate-spin text-blue-600 mr-2" />
+            <span className="text-sm font-semibold text-blue-700">AI analyzing your data...</span>
+          </div>
+        </Card>
+      ) : (
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <button onClick={() => setPreWorkoutAdvice(null)} className="absolute top-4 right-4 p-1 text-gray-500 hover:text-gray-700"><X size={16}/></button>
+          <div className="flex items-start gap-3 mb-2">
+            <MessageSquare size={16} className="text-blue-600 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-gray-900 text-sm">Your Briefing</h4>
+              <p className="text-sm text-gray-700 mt-1 leading-relaxed">{preWorkoutAdvice}</p>
             </div>
           </div>
-        </header>
+        </Card>
+      )}
 
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
+      {/* AI Warmup */}
+      <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="w-full bg-orange-50 border-2 border-orange-200 hover:border-orange-400 text-orange-700 p-4 rounded-xl flex items-center justify-center gap-2 transition-all font-semibold active:scale-95">
+        {isWarmupLoading ? <Loader2 size={16} className="animate-spin" /> : <Flame size={16} />}
+        Dynamic Warmup Routine
+      </button>
 
-          {/* ===== AI COACH HUB ===== */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-black tracking-widest text-[#39FF14] uppercase flex items-center">
-              <Bot size={16} className="mr-2" /> AI Coach Command Center
-            </h2>
-
-            {!preWorkoutAdvice && !isPreWorkoutLoading ? (
-              <button onClick={handleGetPreWorkoutBriefing} className="w-full bg-gradient-to-r from-[#16213e]/50 to-[#1a0f2e]/50 border border-[#00D9FF]/30 hover:border-[#00D9FF]/70 text-[#00FFF0] p-4 rounded-lg flex items-center justify-between transition-all active:scale-95 group">
-                <div className="flex items-center gap-3">
-                  <MessageSquare size={18} className="text-[#00D9FF]" />
-                  <span className="text-xs font-bold tracking-widest">PRE-WORKOUT BRIEFING</span>
-                </div>
-                <ChevronRight size={16} className="opacity-50 group-hover:translate-x-1 transition-transform" />
-              </button>
-            ) : isPreWorkoutLoading ? (
-              <div className="w-full bg-[#16213e]/50 border border-[#00D9FF]/30 p-4 rounded-lg flex items-center justify-center h-16">
-                <Loader2 size={18} className="animate-spin text-[#00D9FF] mr-3" />
-                <span className="text-xs font-bold text-[#00D9FF]">AI reviewing your stats...</span>
-              </div>
-            ) : (
-              <CyberpunkCard neon="cyan">
-                <button onClick={() => setPreWorkoutAdvice(null)} className="absolute top-3 right-3 p-1 text-[#BB86FC] hover:text-white transition-colors"><X size={14}/></button>
-                <div className="flex items-center gap-2 mb-3">
-                  <Bot size={16} className="text-[#00FFF0]" />
-                  <h4 className="text-xs font-black tracking-widest text-[#00FFF0]">BRIEFING FOR TODAY</h4>
-                </div>
-                <p className="text-xs text-[#E0BBE4] font-medium leading-relaxed">{preWorkoutAdvice}</p>
-              </CyberpunkCard>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#FF006E]/20 to-[#BB86FC]/20 border border-[#FF006E]/50 text-[#FF77B4] hover:border-[#FF006E]/70 transition-all active:scale-95 text-xs font-bold tracking-widest">
-                {isWarmupLoading ? <Loader2 size={14} className="animate-spin" /> : <Flame size={14} />}
-                WARMUP
-              </button>
-              <button onClick={handleGenerateRoast} disabled={isRoastLoading} className="flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#39FF14]/20 to-[#00D9FF]/20 border border-[#39FF14]/50 text-[#39FF14] hover:border-[#39FF14]/70 transition-all active:scale-95 text-xs font-bold tracking-widest">
-                {isRoastLoading ? <Loader2 size={14} className="animate-spin" /> : <Skull size={14} />}
-                ROAST ME
-              </button>
-            </div>
-
-            {aiWarmup && (
-              <CyberpunkCard neon="green">
-                <button onClick={() => setAiWarmup(null)} className="absolute top-3 right-3 p-1 text-[#39FF14] hover:text-white transition-colors"><X size={14}/></button>
-                <h4 className="text-xs font-black tracking-widest text-[#39FF14] mb-3 flex items-center">
-                  <Flame size={14} className="mr-2"/> DYNAMIC WARMUP
-                </h4>
-                <p className="text-xs text-[#E0BBE4] font-medium whitespace-pre-wrap leading-relaxed">{aiWarmup}</p>
-              </CyberpunkCard>
-            )}
-          </div>
-
-          {/* ===== MUSCLE STATUS ===== */}
-          <MuscleRecovery logs={logs} exerciseData={exerciseData} />
-
-          {/* ===== WORKOUT SESSION BANNER ===== */}
-          {logs.length > 0 && (
-            <div className="bg-gradient-to-r from-[#1a0f2e]/60 via-[#16213e]/60 to-[#1a0f2e]/60 border border-[#BB86FC]/30 rounded-lg p-6 backdrop-blur-xl">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xs font-black tracking-widest text-[#E0BBE4] flex items-center">
-                  <Sparkles size={16} className="mr-2 text-[#BB86FC]" /> SESSION ANALYSIS
-                </h3>
-                <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="px-3 py-1.5 rounded text-xs font-bold tracking-widest bg-[#39FF14]/20 text-[#39FF14] border border-[#39FF14]/50 hover:bg-[#39FF14]/30 active:scale-95 transition-all flex items-center">
-                  {isSummaryLoading ? <Loader2 size={12} className="animate-spin mr-1" /> : <Sparkles size={12} className="mr-1" />}
-                  EVALUATE
-                </button>
-              </div>
-              
-              {aiBannerData.text ? (
-                <div className="bg-[#16213e]/50 p-4 rounded-lg border border-[#BB86FC]/20">
-                  <p className="text-xs leading-relaxed font-medium text-[#E0BBE4] animate-in slide-in-from-bottom-2">{aiBannerData.text}</p>
-                </div>
-              ) : (
-                <p className="text-xs text-[#BB86FC]/60 font-medium">Log all your sets, then request AI evaluation.</p>
-              )}
-            </div>
-          )}
-
-          {/* ===== EXERCISE CARDS ===== */}
-          <div>
-            <h2 className="text-xs font-black tracking-widest text-[#39FF14] uppercase mb-4 flex items-center">
-              <Target size={16} className="mr-2" /> Exercises
-            </h2>
-            <div className="space-y-4">
-              {(exerciseData[activeTab] || []).map(ex => (
-                <ExerciseCard 
-                  key={ex.id} exercise={ex} activeTab={activeTab} 
-                  onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
-                  onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} 
-                  history={logs.filter(l => l.exerciseId === ex.id)} 
-                />
-              ))}
+      {aiWarmup && (
+        <Card className="border-2 border-orange-200 bg-orange-50">
+          <button onClick={() => setAiWarmup(null)} className="absolute top-4 right-4 p-1 text-gray-500 hover:text-gray-700"><X size={16}/></button>
+          <div className="flex items-start gap-3">
+            <Flame size={16} className="text-orange-600 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-gray-900 text-sm mb-2">Warmup Routine</h4>
+              <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">{aiWarmup}</p>
             </div>
           </div>
+        </Card>
+      )}
+    </div>
+  );
 
-          {/* ===== ADD CUSTOM EXERCISE ===== */}
-          {isAddingExercise ? (
-            <CyberpunkCard neon="purple">
-              <h3 className="font-black mb-4 text-sm text-[#E0BBE4] tracking-tight flex items-center"><PlusCircle size={18} className="mr-2 text-[#BB86FC]"/> CUSTOM EXERCISE</h3>
-              <form onSubmit={handleSaveCustom} className="space-y-3">
-                <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Exercise Name" className="w-full bg-[#1a0f2e] border border-[#BB86FC]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 placeholder-[#BB86FC]/30" autoFocus/>
-                <div className="flex gap-2">
-                  <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Target Muscle" className="flex-1 bg-[#1a0f2e] border border-[#BB86FC]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 placeholder-[#BB86FC]/30"/>
-                  <input type="number" value={newExercise.targetSets} onChange={e => setNewExercise({...newExercise, targetSets: e.target.value})} placeholder="Sets" className="w-20 bg-[#1a0f2e] border border-[#BB86FC]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 placeholder-[#BB86FC]/30"/>
-                </div>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setIsAddingExercise(false)} className="flex-1 px-4 py-2.5 rounded-lg bg-[#16213e] border border-[#BB86FC]/30 text-[#E0BBE4] text-xs font-bold tracking-widest hover:border-[#BB86FC]/70 active:scale-95">CANCEL</button>
-                  <button type="submit" disabled={!newExercise.name} className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#39FF14] to-[#00D9FF] text-[#1a0f2e] text-xs font-bold tracking-widest disabled:opacity-30 active:scale-95 transition-all">ADD</button>
-                </div>
-              </form>
-            </CyberpunkCard>
-          ) : (
+  // ========== TAB 2: TRACK (Exercise Logging) ==========
+  const renderTrack = () => (
+    <div className="space-y-4 pb-24">
+      {/* Split Selector */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur -mx-4 sm:mx-0 px-4 sm:px-0 py-4 border-b border-gray-200">
+        <p className="text-xs font-semibold text-gray-600 mb-2 uppercase">Today's Split</p>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {['Push', 'Pull', 'Legs', 'Upper', 'Legs & Core'].map((t) => (
             <button 
-              onClick={() => setIsAddingExercise(true)} 
-              className="w-full py-4 border-2 border-dashed border-[#BB86FC]/50 text-[#BB86FC] rounded-lg flex items-center justify-center hover:border-[#BB86FC]/70 hover:bg-[#BB86FC]/10 transition-all text-xs font-bold tracking-widest active:scale-95 group"
+              key={t} onClick={() => setActiveWorkoutTab(t)} 
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs font-semibold transition-all border ${activeWorkoutTab === t ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400'}`}
             >
-              <Plus size={18} className="mr-2 group-hover:rotate-90 transition-transform" />
-              ADD CUSTOM EXERCISE
+              {t.toUpperCase()}
             </button>
-          )}
+          ))}
+        </div>
+      </div>
 
-          {/* ===== END SESSION ===== */}
+      {/* Exercise Cards */}
+      <div className="space-y-4">
+        {(exerciseData[activeWorkoutTab] || []).map(ex => (
+          <ExerciseCard 
+            key={ex.id} exercise={ex} activeTab={activeWorkoutTab} 
+            onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
+            onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} 
+            history={logs.filter(l => l.exerciseId === ex.id)} 
+          />
+        ))}
+      </div>
+
+      {/* Add Custom Exercise */}
+      {isAddingExercise ? (
+        <Card className="border-2 border-blue-200">
+          <h3 className="font-semibold mb-4 text-gray-900 text-sm uppercase flex items-center"><PlusCircle size={16} className="mr-2 text-blue-600"/> Custom Exercise</h3>
+          <form onSubmit={handleSaveCustom} className="space-y-3">
+            <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Exercise Name" className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" autoFocus/>
+            <div className="flex gap-2">
+              <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Target Muscle" className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"/>
+              <input type="number" value={newExercise.targetSets} onChange={e => setNewExercise({...newExercise, targetSets: e.target.value})} placeholder="Sets" className="w-20 border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500"/>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setIsAddingExercise(false)} className="flex-1 px-3 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+              <button type="submit" disabled={!newExercise.name} className="flex-1 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm disabled:opacity-40">Add</button>
+            </div>
+          </form>
+        </Card>
+      ) : (
+        <button 
+          onClick={() => setIsAddingExercise(true)} 
+          className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg flex items-center justify-center hover:border-blue-400 hover:bg-blue-50 transition-all font-semibold text-sm active:scale-95 group"
+        >
+          <Plus size={16} className="mr-2 group-hover:rotate-90 transition-transform" />
+          ADD CUSTOM EXERCISE
+        </button>
+      )}
+
+      {/* End Session */}
+      <button 
+         onClick={() => setShowEndSessionModal(true)}
+         className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg font-semibold flex items-center justify-center active:scale-95 transition-all shadow-md"
+      >
+         <CheckSquare size={18} className="mr-2" /> END SESSION
+      </button>
+
+      {/* Daily Journal */}
+      <Card>
+        <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center"><PenTool size={16} className="mr-2 text-blue-600"/> Session Notes</h4>
+        <textarea 
+          value={dailyNote}
+          onChange={(e) => handleSaveNote(e.target.value)}
+          placeholder="How did this workout feel? Any form issues or observations?"
+          className="w-full border border-gray-300 rounded-lg p-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 min-h-[80px] resize-none"
+        />
+      </Card>
+    </div>
+  );
+
+  // ========== TAB 3: STATS (Analytics & History) ==========
+  const renderStats = () => (
+    <div className="space-y-6 pb-24">
+      {/* Workout Timeline */}
+      <Card>
+        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center"><CalendarDays size={16} className="mr-2 text-blue-600"/> Consistency (35 Days)</h3>
+        {logs.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">No workouts logged yet</p>
+        ) : (
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({length: 35}).map((_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - (34 - i));
+              const dateStr = d.toLocaleDateString('id-ID');
+              const hasWorkout = logs.some(l => l.date === dateStr);
+              return (
+                <div key={i} className={`aspect-square rounded-lg text-xs font-bold flex items-center justify-center transition-all ${hasWorkout ? 'bg-blue-500 text-white shadow-md shadow-blue-200' : 'bg-gray-100 text-gray-400'}`} title={dateStr}>
+                  {d.getDate()}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Latest Workouts */}
+      <Card>
+        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center"><History size={16} className="mr-2 text-blue-600"/> Latest Sessions</h3>
+        {logs.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">No workouts yet</p>
+        ) : (
+          <div className="space-y-3">
+            {logs.slice(0, 10).map((log) => {
+              const ex = (exerciseData[activeWorkoutTab] || Object.values(exerciseData).flat()).find(e => e.id === log.exerciseId);
+              return (
+                <div key={log.id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{ex?.name || log.exerciseId}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{log.date} • {log.time}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-gray-900">{log.weight}kg</p>
+                    <p className="text-xs text-gray-500">{log.sets}×{log.reps}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Performance Metrics */}
+      {Object.keys(healthData).length > 0 && (
+        <Card>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center"><TrendingUp size={16} className="mr-2 text-blue-600"/> Health Metrics</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {(() => {
+              const healthList = Object.values(healthData);
+              const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
+              const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
+              const avgSpo2 = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.spo2 || 0), 0) / healthList.length) : 0;
+              const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
+
+              return (
+                <>
+                  <div className="bg-rose-50 border border-rose-200 rounded-lg p-3">
+                    <Heart size={14} className="text-rose-600 mb-1" />
+                    <div className="text-lg font-bold text-gray-900">{avgHr} <span className="text-xs font-semibold text-gray-500">BPM</span></div>
+                    <p className="text-xs text-gray-600 mt-0.5">Avg Heart Rate</p>
+                  </div>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <Flame size={14} className="text-orange-600 mb-1" />
+                    <div className="text-lg font-bold text-gray-900">{avgCals} <span className="text-xs font-semibold text-gray-500">kcal</span></div>
+                    <p className="text-xs text-gray-600 mt-0.5">Avg Calories</p>
+                  </div>
+                  <div className="bg-sky-50 border border-sky-200 rounded-lg p-3">
+                    <Wind size={14} className="text-sky-600 mb-1" />
+                    <div className="text-lg font-bold text-gray-900">{avgSpo2} <span className="text-xs font-semibold text-gray-500">%</span></div>
+                    <p className="text-xs text-gray-600 mt-0.5">Blood Oxygen</p>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <MoonStar size={14} className="text-purple-600 mb-1" />
+                    <div className="text-lg font-bold text-gray-900">{Math.floor(avgSleepMins/60)} <span className="text-xs font-semibold text-gray-500">h</span></div>
+                    <p className="text-xs text-gray-600 mt-0.5">Sleep (7d avg)</p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </Card>
+      )}
+
+      {/* Most Lifted */}
+      <Card>
+        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center"><Trophy size={16} className="mr-2 text-blue-600"/> Top Exercises (By 1RM)</h3>
+        {logs.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">No data yet</p>
+        ) : (
+          <div className="space-y-2">
+            {Array.from(
+              logs.reduce((acc, log) => {
+                const key = log.exerciseId;
+                if (!acc.has(key) || (log.oneRepMax || 0) > (acc.get(key).oneRepMax || 0)) {
+                  acc.set(key, log);
+                }
+                return acc;
+              }, new Map())
+            )
+            .sort((a, b) => (b[1].oneRepMax || 0) - (a[1].oneRepMax || 0))
+            .slice(0, 5)
+            .map(([exId, log]) => {
+              const ex = Object.values(exerciseData).flat().find(e => e.id === exId);
+              return (
+                <div key={exId} className="flex justify-between items-center p-2.5 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-semibold text-gray-900">{ex?.name || exId}</span>
+                  <span className="text-sm font-bold text-blue-600">{log.oneRepMax} kg</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Content */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-6">
+        {activeTab === 'home' && renderHome()}
+        {activeTab === 'track' && renderTrack()}
+        {activeTab === 'stats' && renderStats()}
+      </div>
+
+      {/* Bottom Tab Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl">
+        <div className="max-w-2xl mx-auto flex">
           <button 
-             onClick={() => setShowEndSessionModal(true)}
-             className="w-full py-4 bg-gradient-to-r from-[#39FF14] to-[#00D9FF] text-[#1a0f2e] rounded-lg font-black text-xs tracking-widest shadow-[0_0_30px_rgba(57,255,20,0.4)] hover:shadow-[0_0_50px_rgba(57,255,20,0.6)] active:scale-95 transition-all flex items-center justify-center"
+            onClick={() => setActiveTab('home')}
+            className={`flex-1 py-4 px-3 flex flex-col items-center justify-center gap-2 transition-all border-t-2 ${activeTab === 'home' ? 'border-t-blue-600 bg-blue-50' : 'border-t-transparent hover:bg-gray-50'}`}
           >
-             <CheckSquare size={18} className="mr-2" /> END WORKOUT SESSION
+            <Home size={22} className={activeTab === 'home' ? 'text-blue-600' : 'text-gray-600'} />
+            <span className={`text-xs font-semibold ${activeTab === 'home' ? 'text-blue-600' : 'text-gray-600'}`}>Home</span>
           </button>
 
-          {/* ===== DAILY JOURNAL ===== */}
-          <CyberpunkCard neon="purple">
-            <h4 className="text-xs font-black tracking-widest text-[#E0BBE4] mb-3 flex items-center"><PenTool size={14} className="mr-2 text-[#BB86FC]"/> DAILY JOURNAL</h4>
-            <textarea 
-              value={dailyNote}
-              onChange={(e) => handleSaveNote(e.target.value)}
-              placeholder="Note your condition, energy level, form issues..."
-              className="w-full bg-[#1a0f2e] border border-[#BB86FC]/30 rounded-lg p-3 text-xs text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 min-h-[80px] resize-none placeholder-[#BB86FC]/30 leading-relaxed font-medium"
-            />
-          </CyberpunkCard>
+          <button 
+            onClick={() => setActiveTab('track')}
+            className={`flex-1 py-4 px-3 flex flex-col items-center justify-center gap-2 transition-all border-t-2 relative ${activeTab === 'track' ? 'border-t-blue-600 bg-blue-50' : 'border-t-transparent hover:bg-gray-50'}`}
+          >
+            <Target size={22} className={activeTab === 'track' ? 'text-blue-600' : 'text-gray-600'} />
+            <span className={`text-xs font-semibold ${activeTab === 'track' ? 'text-blue-600' : 'text-gray-600'}`}>Track</span>
+            {restTime > 0 && (
+              <div className="absolute top-2 right-2 bg-blue-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {restTime > 60 ? Math.floor(restTime/60) + 'm' : restTime + 's'}
+              </div>
+            )}
+          </button>
 
-        </main>
+          <button 
+            onClick={() => setActiveTab('stats')}
+            className={`flex-1 py-4 px-3 flex flex-col items-center justify-center gap-2 transition-all border-t-2 ${activeTab === 'stats' ? 'border-t-blue-600 bg-blue-50' : 'border-t-transparent hover:bg-gray-50'}`}
+          >
+            <BarChart2 size={22} className={activeTab === 'stats' ? 'text-blue-600' : 'text-gray-600'} />
+            <span className={`text-xs font-semibold ${activeTab === 'stats' ? 'text-blue-600' : 'text-gray-600'}`}>Stats</span>
+          </button>
+        </div>
       </div>
 
-      {/* ===== MODALS ===== */}
+      {/* MODALS */}
 
       {showTimerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <CyberpunkCard neon="cyan" className="w-full max-w-sm p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-sm">
             <div className="flex justify-between items-center mb-6">
-              <h4 className="text-sm font-black text-[#00FFF0] tracking-widest flex items-center"><Timer size={18} className="mr-2" /> REST TIMER</h4>
-              <button onClick={() => setShowTimerModal(false)} className="p-2 hover:bg-[#BB86FC]/20 rounded-lg transition-all"><X size={16}/></button>
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center"><Timer size={18} className="mr-2 text-blue-600" /> Rest Timer</h4>
+              <button onClick={() => setShowTimerModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={16}/></button>
             </div>
             <div className="text-center mb-8">
-              <span className={`text-5xl font-black tabular-nums tracking-tighter ${restTime === 0 ? 'text-[#BB86FC]/50' : 'text-[#39FF14]'}`}>
+              <span className={`text-5xl font-black tabular-nums tracking-tighter ${restTime === 0 ? 'text-gray-400' : 'text-gray-900'}`}>
                 {Math.floor(restTime/60)}:{(restTime%60).toString().padStart(2, '0')}
               </span>
             </div>
             <div className="grid grid-cols-4 gap-2 mb-6">
-               <button onClick={() => addTime(30)} className="py-2.5 bg-[#16213e] border border-[#39FF14]/50 rounded-lg text-[10px] font-bold text-[#39FF14] hover:border-[#39FF14]/70 hover:bg-[#39FF14]/10 active:scale-95 transition-all">+30s</button>
-               <button onClick={() => addTime(60)} className="py-2.5 bg-[#16213e] border border-[#39FF14]/50 rounded-lg text-[10px] font-bold text-[#39FF14] hover:border-[#39FF14]/70 hover:bg-[#39FF14]/10 active:scale-95 transition-all">+60s</button>
-               <button onClick={() => addTime(90)} className="py-2.5 bg-[#16213e] border border-[#39FF14]/50 rounded-lg text-[10px] font-bold text-[#39FF14] hover:border-[#39FF14]/70 hover:bg-[#39FF14]/10 active:scale-95 transition-all">+90s</button>
-               <button onClick={() => { setRestTime(0); setIsTimerRunning(false); }} className="py-2.5 bg-[#FF006E]/20 border border-[#FF006E]/50 rounded-lg text-[10px] font-bold text-[#FF77B4] hover:border-[#FF006E]/70 active:scale-95 transition-all">RESET</button>
+               <button onClick={() => addTime(30)} className="py-2.5 bg-gray-100 hover:bg-blue-50 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:text-blue-700 active:scale-95">+30s</button>
+               <button onClick={() => addTime(60)} className="py-2.5 bg-gray-100 hover:bg-blue-50 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:text-blue-700 active:scale-95">+60s</button>
+               <button onClick={() => addTime(90)} className="py-2.5 bg-gray-100 hover:bg-blue-50 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:text-blue-700 active:scale-95">+90s</button>
+               <button onClick={() => { setRestTime(0); setIsTimerRunning(false); }} className="py-2.5 bg-rose-100 hover:bg-rose-200 border border-rose-300 rounded-lg text-xs font-semibold text-rose-700 active:scale-95">Reset</button>
             </div>
-            <button onClick={() => setIsTimerRunning(!isTimerRunning)} disabled={restTime === 0} className={`w-full py-3.5 rounded-lg text-sm font-bold tracking-widest flex justify-center items-center active:scale-95 transition-all ${isTimerRunning ? 'bg-gradient-to-r from-[#FF006E] to-[#BB86FC] text-white shadow-[0_0_20px_rgba(255,0,110,0.5)]' : 'bg-[#39FF14] text-[#1a0f2e] disabled:opacity-40 hover:shadow-[0_0_20px_rgba(57,255,20,0.4)]'}`}>
+            <button onClick={() => setIsTimerRunning(!isTimerRunning)} disabled={restTime === 0} className={`w-full py-3.5 rounded-lg text-sm font-semibold flex justify-center items-center active:scale-95 transition-all ${isTimerRunning ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-700'}`}>
               {isTimerRunning ? <><Pause size={18} className="mr-2" /> PAUSE</> : <><Play size={18} className="mr-2" /> START</>}
             </button>
-          </CyberpunkCard>
+          </Card>
         </div>
       )}
 
       {showEndSessionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <CyberpunkCard neon="green" className="w-full max-w-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-sm">
             <div className="flex justify-between items-center mb-6">
-              <h4 className="text-sm font-black text-[#39FF14] tracking-widest flex items-center"><CheckSquare size={18} className="mr-2" /> END WORKOUT</h4>
-              <button onClick={() => setShowEndSessionModal(false)} className="p-2 hover:bg-[#BB86FC]/20 rounded-lg transition-all"><X size={16}/></button>
+              <h4 className="text-lg font-semibold text-gray-900 flex items-center"><CheckSquare size={18} className="mr-2 text-emerald-600" /> End Session</h4>
+              <button onClick={() => setShowEndSessionModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={16}/></button>
             </div>
             
-            <p className="text-[11px] text-[#BB86FC] mb-4 font-medium bg-[#16213e]/50 p-3 rounded-lg border border-[#BB86FC]/20">
-              Leave blank if using Apple Health shortcuts. Fill manually if on Android.
+            <p className="text-xs text-gray-600 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-200">
+              Leave blank if using Apple Health. Fill manually otherwise.
             </p>
 
             <form onSubmit={handleSaveHealthMetrics} className="space-y-3">
-              <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full bg-[#1a0f2e] border border-[#39FF14]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#39FF14] outline-none focus:ring-2 focus:ring-[#39FF14]/50 placeholder-[#39FF14]/30" placeholder="Duration (Minutes)" />
-              <input type="number" value={healthMetrics.cals} onChange={(e) => setHealthMetrics({...healthMetrics, cals: e.target.value})} className="w-full bg-[#1a0f2e] border border-[#FF006E]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#FF77B4] outline-none focus:ring-2 focus:ring-[#FF006E]/50 placeholder-[#FF006E]/30" placeholder="Calories Burned (Kcal)" />
-              <input type="number" value={healthMetrics.hr} onChange={(e) => setHealthMetrics({...healthMetrics, hr: e.target.value})} className="w-full bg-[#1a0f2e] border border-[#FF006E]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#FF77B4] outline-none focus:ring-2 focus:ring-[#FF006E]/50 placeholder-[#FF006E]/30" placeholder="Avg Heart Rate (BPM)" />
-              <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-[#1a0f2e] border border-[#00D9FF]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#00FFF0] outline-none focus:ring-2 focus:ring-[#00D9FF]/50 placeholder-[#00D9FF]/30" placeholder="Sleep Last Night (Minutes)" />
-              <input type="number" step="0.1" value={healthMetrics.spo2} onChange={(e) => setHealthMetrics({...healthMetrics, spo2: e.target.value})} className="w-full bg-[#1a0f2e] border border-[#BB86FC]/50 rounded-lg px-4 py-2.5 text-xs font-bold text-[#E0BBE4] outline-none focus:ring-2 focus:ring-[#BB86FC]/50 placeholder-[#BB86FC]/30" placeholder="SpO2 Blood Oxygen (%)" />
+              <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Duration (Minutes)" />
+              <input type="number" value={healthMetrics.cals} onChange={(e) => setHealthMetrics({...healthMetrics, cals: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Calories Burned" />
+              <input type="number" value={healthMetrics.hr} onChange={(e) => setHealthMetrics({...healthMetrics, hr: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Avg Heart Rate (BPM)" />
+              <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Sleep Last Night (Minutes)" />
+              <input type="number" step="0.1" value={healthMetrics.spo2} onChange={(e) => setHealthMetrics({...healthMetrics, spo2: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" placeholder="Blood Oxygen %" />
               
-              <button type="submit" className="w-full mt-4 py-3 bg-gradient-to-r from-[#39FF14] to-[#00D9FF] text-[#1a0f2e] rounded-lg font-black text-xs tracking-widest active:scale-95 transition-all">
-                SAVE METRICS
+              <button type="submit" className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold active:scale-95">
+                SAVE & END SESSION
               </button>
             </form>
-          </CyberpunkCard>
+          </Card>
         </div>
       )}
 
       {confirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <CyberpunkCard neon="pink" className="w-full max-w-sm">
-            <h4 className="text-sm font-black text-[#FF77B4] mb-3 tracking-tight">{confirmDialog.isAlert ? 'ALERT' : 'CONFIRM'}</h4>
-            <p className="text-xs text-[#E0BBE4] mb-6 font-medium leading-relaxed">{confirmDialog.message}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+          <Card className="w-full max-w-sm">
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">{confirmDialog.isAlert ? 'Alert' : 'Confirm'}</h4>
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmDialog.message}</p>
             <div className="flex gap-2">
               {!confirmDialog.isAlert && (
-                <button onClick={() => setConfirmDialog(null)} className="flex-1 py-2.5 bg-[#16213e] border border-[#BB86FC]/30 text-[#E0BBE4] rounded-lg font-bold text-xs tracking-widest hover:border-[#BB86FC]/70 active:scale-95 transition-all">CANCEL</button>
+                <button onClick={() => setConfirmDialog(null)} className="flex-1 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
               )}
-              <button onClick={confirmDialog.onConfirm} className={`flex-1 py-2.5 rounded-lg font-bold text-xs tracking-widest active:scale-95 transition-all ${confirmDialog.isAlert ? 'bg-[#39FF14] text-[#1a0f2e]' : 'bg-[#FF006E] text-white hover:bg-[#FF0050]'}`}>
+              <button onClick={confirmDialog.onConfirm} className={`flex-1 py-2.5 rounded-lg font-semibold text-sm active:scale-95 ${confirmDialog.isAlert ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-rose-600 text-white hover:bg-rose-700'}`}>
                 {confirmDialog.isAlert ? 'OK' : 'DELETE'}
               </button>
             </div>
-          </CyberpunkCard>
-        </div>
-      )}
-
-      {showInsightsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <CyberpunkCard neon="cyan" className="w-full max-w-sm max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h4 className="text-sm font-black text-[#00FFF0] tracking-widest"><Activity size={16} className="inline mr-2"/> INSIGHTS</h4>
-              <button onClick={() => setShowInsightsModal(false)} className="p-2 hover:bg-[#00D9FF]/20 rounded-lg"><X size={16}/></button>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xs font-black text-[#39FF14] tracking-widest mb-3">CONSISTENCY HEATMAP</h3>
-                {logs.length === 0 ? (
-                  <p className="text-xs text-[#BB86FC]/60 italic">No workouts logged yet.</p>
-                ) : (
-                  <div className="grid grid-cols-7 gap-2">
-                    {Array.from({length: 35}).map((_, i) => {
-                      const d = new Date();
-                      d.setDate(d.getDate() - (34 - i));
-                      const dateStr = d.toLocaleDateString('id-ID');
-                      const isActive = logs.some(l => l.date === dateStr);
-                      return (
-                        <div key={i} className={`aspect-square rounded-lg text-[10px] font-bold flex items-center justify-center transition-all ${isActive ? 'bg-[#39FF14] text-[#1a0f2e] shadow-[0_0_15px_rgba(57,255,20,0.5)]' : 'bg-[#16213e] text-[#BB86FC]/60'}`}>
-                          {d.getDate()}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="text-xs font-black text-[#FF77B4] tracking-widest mb-3">WEEKLY VOLUME</h3>
-                <p className="text-[10px] text-[#BB86FC]/60 mb-2">Target: 10-20 Sets Per Muscle</p>
-                {/* Simplified volume display */}
-                <div className="text-[11px] text-[#E0BBE4]">
-                  {logs.length > 0 ? `${logs.length} sets logged this week` : 'No data yet'}
-                </div>
-              </div>
-            </div>
-          </CyberpunkCard>
+          </Card>
         </div>
       )}
 
       {restTime > 0 && !showTimerModal && (
-        <button onClick={() => setShowTimerModal(true)} className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#FF006E] to-[#BB86FC] text-white px-5 py-3.5 rounded-full shadow-[0_0_30px_rgba(255,0,110,0.5)] flex items-center gap-3 animate-in slide-in-from-bottom-5 hover:scale-105 transition-transform font-black text-sm tracking-widest border border-[#FF006E]">
+        <button onClick={() => setShowTimerModal(true)} className="fixed bottom-24 right-6 z-40 bg-blue-600 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-5 hover:bg-blue-700 transition-all font-bold">
            <Timer size={18} className="animate-pulse" />
            {Math.floor(restTime/60)}:{(restTime%60).toString().padStart(2, '0')}
         </button>
       )}
-
     </div>
   );
 }
