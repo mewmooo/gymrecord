@@ -8,6 +8,7 @@ import {
   Droplets, ListOrdered, ChevronLeft
 } from 'lucide-react';
 
+// --- UTILITAS ---
 const getYouTubeId = (url) => {
   if (!url) return null;
   if (url.length === 11 && !url.includes('/')) return url; 
@@ -30,6 +31,7 @@ const getMuscleById = (id, data) => {
   return 'Umum';
 };
 
+// --- DATA MASTER ---
 const INITIAL_EXERCISE_DATA = {
   Push: [
     { id: 'p1', name: 'Chest Press', muscle: 'Dada', videoId: '0GjpPFOx1uQ', targetSets: 3 },
@@ -75,12 +77,15 @@ const getTodaySplit = () => {
   return 'Rest'; 
 };
 
+// --- GEMINI API CALLER ---
 const callGeminiAPI = async (prompt, isRaw = false) => {
   let apiKey = "";
   try { apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; } catch (e) {}
   if (!apiKey) return "API Key belum diatur di Vercel/Environment.";
   
   const combinedPrompt = isRaw ? prompt : "Jawab ringkas dalam 2-4 kalimat. Profesional, asik ala coach gym, bahasa Indonesia elegan. Jangan bertele-tele.\n\n" + prompt;
+  
+  // Mencoba beberapa versi model jika ada limitasi
   const models = ['gemini-3.1-flash-lite', 'gemini-3.1-pro', 'gemini-2.5-flash', 'gemini-1.5-flash'];
 
   for (const model of models) {
@@ -94,6 +99,7 @@ const callGeminiAPI = async (prompt, isRaw = false) => {
   return null; 
 };
 
+// --- KOMPONEN BENTO: HEATMAP ---
 const ActivityHeatmap = ({ logs }) => {
   const [days, setDays] = useState([]);
   const [activeDates, setActiveDates] = useState(new Set());
@@ -134,12 +140,13 @@ const ActivityHeatmap = ({ logs }) => {
   );
 };
 
+// --- KOMPONEN KARTU LATIHAN ---
 const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, onUpdateVideo, activeTab, startRestTimer }) => {
   const [weight, setWeight] = useState(''); const [sets, setSets] = useState('');
   const [reps, setReps] = useState(''); const [rpe, setRpe] = useState('');
   const [setType, setSetType] = useState('Normal'); const [tempSubSets, setTempSubSets] = useState([]); 
   
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false); // BENTO ACCORDION
   const [showHistory, setShowHistory] = useState(false);
   const [historyView, setHistoryView] = useState('list'); // 'list' | 'chart'
   const [showSuccess, setShowSuccess] = useState(false);
@@ -498,7 +505,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
                 <Crown size={32} className="text-amber-500" />
               </div>
               <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight relative z-10">NEW PR!</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed relative z-10">Luar biasa! Estimasi 1RM untuk {exercise.name} Anda memecahkan rekor!</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed relative z-10">Luar biasa! Estimasi 1RM untuk {exercise.name} memecahkan rekor!</p>
             </div>
           </div>
         </div>
@@ -519,10 +526,11 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   );
 };
 
+// --- APP UTAMA ---
 export default function App() {
   const [isBooting, setIsBooting] = useState(true);
   const todaySplit = getTodaySplit();
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'Push', 'Pull', etc.
+  const [activeTab, setActiveTab] = useState('home'); 
   const [isDarkMode, setIsDarkMode] = useState(true);
   
   // States (Local Storage v12 Offline)
@@ -541,7 +549,7 @@ export default function App() {
       const savedDark = localStorage.getItem('gym_dark_v12');
       if (savedDark === 'false') setIsDarkMode(false);
       setIsBooting(false);
-    }, 800); // 0.8s splash screen untuk menghapus white screen of death
+    }, 800); 
   }, []);
 
   // Theme Sync
@@ -569,14 +577,13 @@ export default function App() {
       const cals = params.get('cals') ? Math.round(parseFloat(params.get('cals').replace(',', '.'))) : 0;
       const spo2 = params.get('spo2') ? Math.round(parseFloat(params.get('spo2').replace(',', '.'))) : 0;
       
-      // HACK: Mengurangi rawSleep dengan 33 menit untuk akurasi Asleep vs In Bed
       const rawSleep = params.get('sleep') ? parseFloat(params.get('sleep').replace(',', '.')) : 0;
-      const sleep = isNaN(rawSleep) || rawSleep === 0 ? 0 : Math.max(0, Math.round(rawSleep) - 33);
+      const sleep = isNaN(rawSleep) || rawSleep === 0 ? 0 : Math.max(0, Math.round(rawSleep) - 33); // HACK -33 Min
       
       const today = new Date().toLocaleDateString('id-ID');
       setHealthData(prev => ({ ...prev, [today]: { hr: hr||0, cals: cals||0, sleep: sleep, spo2: spo2||0 } }));
 
-      // Bersihkan URL diam-diam
+      // Clean URL
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [isBooting]);
@@ -594,7 +601,7 @@ export default function App() {
 
   const runAIFeature = async (title, prompt, style = 'indigo', icon = <Sparkles size={16}/>) => {
     setAiPanel({ text: null, loading: true, title, icon, style });
-    const response = await callGeminiAPI(prompt, title.includes('Roast')); // Roast menggunakan raw prompt
+    const response = await callGeminiAPI(prompt, title.includes('Roast')); 
     setAiPanel({ text: response || "Gagal memuat AI.", loading: false, title, icon, style });
   };
 
@@ -658,14 +665,12 @@ export default function App() {
   return (
     <div className={`min-h-screen font-sans antialiased selection:bg-indigo-500/30 ${isDarkMode ? 'dark bg-[#050505] text-white' : 'bg-[#FAFAFA] text-gray-900'} transition-colors duration-500 pb-[env(safe-area-inset-bottom)] relative`}>
       
-      {/* Background Decorators */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className={`absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20 ${isDarkMode ? 'bg-indigo-600/30' : 'bg-indigo-400/20'}`}></div>
         <div className={`absolute top-[30%] -left-40 w-[400px] h-[400px] rounded-full blur-[100px] opacity-20 ${isDarkMode ? 'bg-rose-600/20' : 'bg-rose-400/20'}`}></div>
       </div>
 
       <div className="relative z-10 pb-32">
-        {/* Glass Header */}
         <header className="sticky top-0 z-40 bg-white/70 dark:bg-[#050505]/70 backdrop-blur-3xl border-b border-gray-200/50 dark:border-white/5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-4 px-5 transition-all">
           <div className="max-w-xl mx-auto flex justify-between items-center">
             <div className="flex items-center space-x-3">
@@ -689,7 +694,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Segmented Control Header (Shown only on non-home tabs) */}
           {activeTab !== 'home' && (
             <div className="max-w-xl mx-auto mt-6 animate-in slide-in-from-bottom-2 duration-300">
               <div className="flex p-1.5 bg-gray-200/50 dark:bg-[#121215] rounded-[20px] overflow-x-auto no-scrollbar shadow-inner">
@@ -708,10 +712,8 @@ export default function App() {
 
         <main className="max-w-xl mx-auto px-5 pt-8 space-y-6">
           
-          {/* TAB: DASHBOARD (HOME) */}
           {activeTab === 'home' && (
             <div className="space-y-6 animate-in fade-in duration-500">
-              {/* Health Bento Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/80 dark:bg-[#121215]/80 backdrop-blur-md p-5 rounded-[28px] border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-lg transition-all">
                   <Activity size={18} className="text-rose-500 mb-3" />
@@ -733,7 +735,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* AI Hub Horizontal */}
               <div className="pt-2">
                 <h3 className="text-[12px] font-black uppercase tracking-widest text-gray-500 mb-3 ml-2">Asisten Cerdas</h3>
                 <div className="flex overflow-x-auto no-scrollbar gap-3 pb-4">
@@ -759,7 +760,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* AI Response Panel */}
                 {(aiPanel.text || aiPanel.loading) && (
                   <div className={`p-6 rounded-[32px] animate-in slide-in-from-top-4 mt-2 mb-6 border ${aiPanel.style === 'rose' ? 'bg-rose-50/80 dark:bg-[#1a0b11] border-rose-100 dark:border-rose-900/30' : aiPanel.style === 'orange' ? 'bg-orange-50/80 dark:bg-[#1f130a] border-orange-100 dark:border-orange-900/30' : aiPanel.style === 'cyan' ? 'bg-cyan-50/80 dark:bg-[#081a20] border-cyan-100 dark:border-cyan-900/30' : 'bg-indigo-50/80 dark:bg-[#0a0f1c] border-indigo-100 dark:border-indigo-900/30'}`}>
                     <div className="flex justify-between items-center mb-4">
@@ -777,7 +777,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* Jurnal Harian */}
               <div className="bg-yellow-50 dark:bg-[#1c1810] border border-yellow-200 dark:border-yellow-900/30 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-6 opacity-10"><BookOpen size={100} className="text-yellow-600" /></div>
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-500 mb-4 flex items-center relative z-10"><PenTool size={14} className="mr-2"/> Jurnal Latihan Hari Ini</h4>
@@ -792,7 +791,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: TRACK LATIHAN */}
           {activeTab !== 'home' && (
             <div className="space-y-6 animate-in fade-in duration-300">
               {todaySplit === 'Rest' && activeTab === 'Push' && (
@@ -840,7 +838,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Floating Bottom Nav */}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/80 dark:bg-[#1C1F26]/80 backdrop-blur-3xl border border-gray-200/50 dark:border-white/5 rounded-full p-2 shadow-2xl flex justify-between items-center z-50">
         <button onClick={() => setActiveTab('home')} className={`flex-1 py-3 flex flex-col items-center justify-center rounded-[24px] transition-all duration-300 ${activeTab === 'home' ? 'bg-indigo-50 dark:bg-[#252836] text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
           <Home size={20} className={activeTab === 'home' ? 'mb-1 scale-110' : ''} />
