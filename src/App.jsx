@@ -32,7 +32,7 @@ const getMuscleById = (id, data) => {
   return 'Umum';
 };
 
-// Data Master Baru
+// Data Master
 const INITIAL_EXERCISE_DATA = {
   Push: [
     { id: 'p1', name: 'Chest Press', muscle: 'Dada', videoId: '0GjpPFOx1uQ', targetSets: 3 },
@@ -149,31 +149,34 @@ const MuscleRecovery = ({ logs, exerciseData }) => {
 
   return (
     <div className="mb-6 animate-in slide-in-from-top-2">
-      <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 px-1 flex items-center">
-        <Activity size={12} className="mr-1.5 text-indigo-500"/> Status Otot (72 Jam Terakhir)
+      <h4 className="text-xs font-medium uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4 px-1 flex items-center">
+        <Activity size={14} className="mr-2 text-blue-500"/> Status Otot (72 Jam Terakhir)
       </h4>
-      <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-2 px-1">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 px-1">
         {recoveryData.map((item, idx) => {
-          let styles = "bg-green-50 border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400";
+          let bgColor = "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20";
+          let textColor = "text-green-700 dark:text-green-400";
           let Icon = BatteryFull;
           let label = "Siap";
           
           if (item.status === 'tired') {
-             styles = "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400";
+             bgColor = "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20";
+             textColor = "text-red-700 dark:text-red-400";
              Icon = Battery;
              label = "Lelah";
           } else if (item.status === 'recovering') {
-             styles = "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400";
+             bgColor = "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20";
+             textColor = "text-amber-700 dark:text-amber-400";
              Icon = BatteryCharging;
              label = "Pemulihan";
           }
 
           return (
-            <div key={idx} className={`flex items-center flex-shrink-0 px-3 py-2 rounded-2xl border ${styles} shadow-sm transition-all`}>
+            <div key={idx} className={`flex items-center flex-shrink-0 px-3 py-2 rounded-xl border ${bgColor} ${textColor} shadow-sm transition-all backdrop-blur-sm`}>
                <Icon size={14} className="mr-2" />
                <div className="flex flex-col">
-                 <span className="text-[11px] font-bold leading-tight">{item.muscle}</span>
-                 <span className="text-[9px] font-black uppercase tracking-widest opacity-80">{label}</span>
+                 <span className="text-xs font-semibold leading-tight">{item.muscle}</span>
+                 <span className="text-[10px] font-medium opacity-80">{label}</span>
                </div>
             </div>
           )
@@ -183,7 +186,7 @@ const MuscleRecovery = ({ logs, exerciseData }) => {
   );
 };
 
-// --- KOMPONEN: EXERCISE CARD ---
+// --- KOMPONEN: EXERCISE CARD (MODERN REDESIGN) ---
 const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDeleteExercise, onEditExercise, activeTab }) => {
   const [weight, setWeight] = useState('');
   const [sets, setSets] = useState('');
@@ -301,31 +304,31 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   };
 
   const ChartView = () => {
-    if (history.length === 0) return <p className="text-xs text-gray-500 text-center py-4">Belum ada data untuk grafik.</p>;
+    if (history.length === 0) return <p className="text-xs text-slate-500 text-center py-4">Belum ada data untuk grafik.</p>;
     const chartData = [...history].slice(0, 7).reverse();
     const max1RM = Math.max(...chartData.map(d => d.oneRepMax || 0));
     const upperBound = max1RM > 0 ? max1RM * 1.2 : 10;
 
     return (
-      <div className="pt-2 pb-2 animate-in fade-in h-48 flex gap-2">
-        <div className="flex flex-col justify-between text-[9px] font-bold text-gray-400 pb-5 pt-4 border-r border-gray-200 dark:border-gray-800 pr-2">
+      <div className="pt-4 pb-2 animate-in fade-in h-48 flex gap-2">
+        <div className="flex flex-col justify-between text-xs font-semibold text-slate-400 pb-5 pt-4 border-r border-slate-200 dark:border-slate-800 pr-2">
           <span>{Math.round(upperBound)}</span>
           <span>{Math.round(upperBound / 2)}</span>
           <span>0</span>
         </div>
-        <div className="flex-1 relative flex items-end justify-around h-full gap-1 sm:gap-2">
+        <div className="flex-1 relative flex items-end justify-around h-full gap-1">
           <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-5 pt-4 z-0">
-            <div className="w-full h-px border-t border-dashed border-gray-200 dark:border-gray-800"></div>
-            <div className="w-full h-px border-t border-dashed border-gray-200 dark:border-gray-800"></div>
-            <div className="w-full h-px border-t border-dashed border-gray-200 dark:border-gray-800"></div>
+            <div className="w-full h-px border-t border-dashed border-slate-200 dark:border-slate-800"></div>
+            <div className="w-full h-px border-t border-dashed border-slate-200 dark:border-slate-800"></div>
+            <div className="w-full h-px border-t border-dashed border-slate-200 dark:border-slate-800"></div>
           </div>
           {chartData.map((d, i) => {
             const heightPct = Math.max(1, ((d.oneRepMax || 0) / upperBound) * 100);
             return (
               <div key={i} className="flex flex-col items-center flex-1 h-full justify-end relative z-10">
-                <div className="text-[10px] font-black text-gray-800 dark:text-gray-200 mb-1 z-20">{d.oneRepMax}</div>
-                <div className={`w-full max-w-[28px] rounded-t-md transition-all duration-700 ${d.isPR ? 'bg-gradient-to-t from-amber-400 to-yellow-500 shadow-[0_0_10px_rgba(251,191,36,0.4)]' : 'bg-gradient-to-t from-indigo-500 to-indigo-400'}`} style={{ height: `${heightPct}%` }}></div>
-                <div className="text-[8px] font-bold text-gray-400 mt-2 truncate w-full text-center h-3">{d.date.split(' ')[0]}</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{d.oneRepMax}</div>
+                <div className={`w-full max-w-6 rounded-t transition-all duration-700 ${d.isPR ? 'bg-amber-400' : 'bg-blue-500'}`} style={{ height: `${heightPct}%` }}></div>
+                <div className="text-[10px] font-medium text-slate-400 mt-2">{d.date.split(' ')[0]}</div>
               </div>
             );
           })}
@@ -345,285 +348,264 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   });
 
   return (
-    <div className="group bg-white dark:bg-[#0f1117] rounded-[24px] p-5 sm:p-7 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 dark:shadow-none border border-gray-100 dark:border-gray-800/80 mb-6 transition-all duration-300 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500/0 via-fuchsia-500/20 to-violet-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6 mb-6">
-        <div className="flex-1 w-full">
-          {isEditingEx ? (
-            <div className="space-y-3 mb-2 animate-in fade-in">
-              <input type="text" value={exEditForm.name} onChange={e => setExEditForm({...exEditForm, name: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-sm font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Nama Latihan" />
-              <div className="flex gap-2">
-                <input type="text" value={exEditForm.muscle} onChange={e => setExEditForm({...exEditForm, muscle: e.target.value})} className="w-2/3 bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-xs font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Target Otot" />
-                <input type="number" value={exEditForm.targetSets} onChange={e => setExEditForm({...exEditForm, targetSets: e.target.value})} className="w-1/3 bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-xs font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Target Set" />
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 mb-6 overflow-hidden">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <div className="flex-1">
+            {isEditingEx ? (
+              <div className="space-y-4 mb-2">
+                <input type="text" value={exEditForm.name} onChange={e => setExEditForm({...exEditForm, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" placeholder="Nama Latihan" />
+                <div className="flex gap-2">
+                  <input type="text" value={exEditForm.muscle} onChange={e => setExEditForm({...exEditForm, muscle: e.target.value})} className="w-2/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" placeholder="Target Otot" />
+                  <input type="number" value={exEditForm.targetSets} onChange={e => setExEditForm({...exEditForm, targetSets: e.target.value})} className="w-1/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" placeholder="Set" />
+                </div>
+                <input type="text" value={exEditForm.videoUrl} onChange={e => setExEditForm({...exEditForm, videoUrl: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30 transition-all" placeholder="Link YouTube (Opsional)" />
+                <div className="flex gap-2">
+                  <button onClick={handleSaveExEdit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"><Save size={14} className="mr-1.5 inline"/> Simpan</button>
+                  <button onClick={() => setIsEditingEx(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg transition-colors">Batal</button>
+                </div>
               </div>
-              <input type="text" value={exEditForm.videoUrl} onChange={e => setExEditForm({...exEditForm, videoUrl: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-[16px] sm:text-xs font-semibold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none" placeholder="Link YouTube (Opsional)" />
-              <div className="flex space-x-2 pt-2">
-                <button onClick={handleSaveExEdit} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center active:scale-95 transition-all"><Save size={14} className="mr-2"/> Simpan</button>
-                <button onClick={() => setIsEditingEx(false)} className="px-5 py-2.5 bg-gray-100 dark:bg-[#1a1d27] hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-xl active:scale-95 transition-all">Batal</button>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">{exercise.name}</h3>
+                  <div className="flex gap-1 opacity-0 hover:opacity-100 transition-opacity">
+                    <button onClick={() => {
+                        setExEditForm({ name: exercise.name, muscle: exercise.muscle, targetSets: exercise.targetSets || 3, videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : '' });
+                        setIsEditingEx(true);
+                      }} 
+                      className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                    {exercise.muscle}
+                  </span>
+                  {exercise.targetSets && (
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">
+                      🎯 Target: {exercise.targetSets} Set
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            {exercise.videoId ? (
+              <button 
+                onClick={(e) => { e.preventDefault(); setShowVideo(!showVideo); }}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 ${showVideo ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-500/10'}`} 
+              >
+                <PlayCircle size={16} /> Video
+              </button>
+            ) : (
+              <a 
+                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`}
+                target="_blank" rel="noopener noreferrer"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors flex items-center gap-2"
+              >
+                <PlayCircle size={16} /> Video
+              </a>
+            )}
+            
+            <button onClick={handleGetAlternative} className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors flex items-center gap-2">
+              {isAiAltLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Alt
+            </button>
+            
+            <button onClick={handleGetTip} className="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2">
+              {isAiTipLoading ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />} Tips
+            </button>
+          </div>
+        </div>
+
+        {/* Video & AI Tips */}
+        {showVideo && exercise.videoId && (
+          <div className="rounded-lg overflow-hidden bg-black border border-slate-200 dark:border-slate-800 aspect-video">
+            <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0`} title="Tutorial" allowFullScreen></iframe>
+          </div>
+        )}
+
+        {aiTip && (
+          <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-lg flex gap-3">
+            <Sparkles size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">{aiTip}</p>
+          </div>
+        )}
+
+        {aiAlt && (
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg flex gap-3">
+            <RefreshCw size={16} className="text-slate-600 dark:text-slate-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{aiAlt}</p>
+          </div>
+        )}
+
+        {aiProgress && (
+          <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 p-4 rounded-lg flex gap-3">
+            <TrendingUp size={16} className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-green-900 dark:text-green-100 font-medium">{aiProgress}</p>
+          </div>
+        )}
+
+        {/* Input Form */}
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div className="flex gap-1.5">
+            {['Normal', 'Drop Set', 'Superset'].map(type => (
+              <button 
+                key={type} type="button" onClick={() => handleSetTypeChange(type)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${setType === type ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+
+          {setType !== 'Normal' && tempSubSets.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-3 bg-white dark:bg-slate-700 rounded-lg border border-dashed border-slate-200 dark:border-slate-600">
+              {tempSubSets.map((s, i) => (
+                <div key={i} className="text-xs font-semibold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-lg flex items-center gap-2 border border-blue-200 dark:border-blue-500/30">
+                  {s.weight}kg × {s.reps} {s.rpe && <span className="opacity-60">RPE:{s.rpe}</span>}
+                  <button type="button" onClick={() => setTempSubSets(tempSubSets.filter((_, idx) => idx !== i))} className="text-blue-400 hover:text-red-500 transition-colors"><X size={12}/></button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={onFormSubmit} className="flex flex-col gap-3">
+            <div className={`grid gap-2 ${setType === 'Normal' ? 'grid-cols-4' : 'grid-cols-3'}`}>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">KG</label>
+                <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="0" />
+              </div>
+              {setType === 'Normal' && (
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase">SET</label>
+                  <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="0" />
+                </div>
+              )}
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">REP</label>
+                <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="0" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase">RPE</label>
+                <input type="number" min="1" max="10" value={rpe} onChange={(e) => setRpe(e.target.value)} className="w-full mt-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" placeholder="1-10" />
               </div>
             </div>
-          ) : (
-            <>
-              <div className="flex items-center space-x-3 flex-wrap sm:flex-nowrap">
-                <h3 className="text-[18px] sm:text-[20px] font-black text-gray-900 dark:text-white tracking-tight leading-tight">{exercise.name}</h3>
-                
-                <div className="flex space-x-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 mt-2 sm:mt-0">
-                  <button onClick={() => {
-                      setExEditForm({ name: exercise.name, muscle: exercise.muscle, targetSets: exercise.targetSets || 3, videoUrl: exercise.videoId ? `https://youtu.be/${exercise.videoId}` : '' });
-                      setIsEditingEx(true);
-                    }} 
-                    className="p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors" title="Edit Gerakan & Video"
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  <button onClick={() => onDeleteExercise(activeTab, exercise.id)} className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 size={14} /></button>
-                </div>
+            
+            {setType === 'Normal' ? (
+              <button type="submit" disabled={!weight || !sets || !reps} className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors ${showSuccess ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40'}`}>
+                {showSuccess ? <CheckCircle size={16} className="inline mr-1.5" /> : ''}CATAT
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                 <button type="submit" disabled={!weight || !reps} className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-40">
+                   Tambah
+                 </button>
+                 <button type="button" onClick={handleSubmit} disabled={tempSubSets.length === 0} className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${showSuccess ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40'}`}>
+                   {showSuccess ? <CheckCircle size={16} className="inline mr-1.5" /> : ''}SIMPAN
+                 </button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-2.5">
-                <div className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gray-100 dark:bg-[#1a1d27] text-gray-500 dark:text-gray-400 border border-gray-200/50 dark:border-gray-800">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-2"></span>
-                  {exercise.muscle}
-                </div>
-                {exercise.targetSets && (
-                  <div className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-violet-50/80 dark:bg-violet-500/10 text-violet-600 dark:text-violet-300 border border-violet-100/50 dark:border-violet-500/20">
-                    🎯 Target: {exercise.targetSets} Set
+            )}
+          </form>
+        </div>
+
+        {/* History */}
+        {history.length > 0 && (
+          <div className="space-y-3 border-t border-slate-200 dark:border-slate-800 pt-4">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                <button onClick={() => { setShowHistory(true); setHistoryTab('list'); }} className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${showHistory && historyTab === 'list' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}>List</button>
+                <button onClick={() => { setShowHistory(true); setHistoryTab('chart'); }} className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${showHistory && historyTab === 'chart' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-600 dark:text-slate-400'}`}>Chart</button>
+              </div>
+              <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+                {isAiProgressLoading ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />} Analisis
+              </button>
+            </div>
+
+            {showHistory && (
+              <div className="space-y-3 bg-slate-50 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                {historyTab === 'chart' ? (
+                  <ChartView />
+                ) : (
+                  <div className="space-y-4">
+                    {groupedHistory.map((group, gIndex) => (
+                      <div key={gIndex} className="space-y-2">
+                        <div className="flex items-center gap-2 px-1 pt-1">
+                          <div className="flex-1 h-px bg-slate-300 dark:bg-slate-700"></div>
+                          <span className="text-xs font-semibold text-slate-500">{group.date}</span>
+                          <div className="flex-1 h-px bg-slate-300 dark:bg-slate-700"></div>
+                        </div>
+                        
+                        {group.logs.map((log) => (
+                          <div key={log.id} className="relative">
+                            {editingId === log.id ? (
+                              <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <div className="flex gap-2 mb-3">
+                                   <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm font-bold dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" />
+                                   <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm font-bold dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" />
+                                   <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-sm font-bold dark:text-white focus:ring-2 focus:ring-blue-500/30 outline-none" />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => setEditingId(null)} className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">Batal</button>
+                                  <button onClick={() => saveEdit(log.id)} className="px-3 py-2 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 rounded transition-colors">Simpan</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between items-start bg-white dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 p-3.5 rounded-lg">
+                                <div className="flex-1">
+                                  <div className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                                    {log.isPR && <Crown size={14} className="text-amber-500" />}
+                                    {log.subSets ? (
+                                      <span>
+                                        {log.subSets.map((sub, i) => (
+                                          <React.Fragment key={i}>
+                                            <span>{sub.weight}kg × {sub.reps}</span>
+                                            {i < log.subSets.length - 1 && <span className="mx-1 text-blue-500">→</span>}
+                                          </React.Fragment>
+                                        ))}
+                                      </span>
+                                    ) : (
+                                      <span>{log.weight}kg × {log.sets}×{log.reps}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500">
+                                    <Clock size={12} /> {log.time}
+                                    {log.rpe && <span>RPE: {log.rpe}</span>}
+                                    <span className="text-blue-600 dark:text-blue-400 font-semibold">1RM: {log.oneRepMax}</span>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1.5 ml-2">
+                                  {!log.subSets && <button onClick={() => startEdit(log)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"><Edit2 size={14} /></button>}
+                                  <button onClick={() => onDeleteLog(log.id)} className="p-1.5 text-slate-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 rounded transition-colors"><Trash2 size={14} /></button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            </>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 shrink-0 w-full sm:w-auto sm:flex sm:justify-end mt-2 sm:mt-0">
-          {exercise.videoId ? (
-            <button 
-              onClick={(e) => { e.preventDefault(); setShowVideo(!showVideo); setAiTip(null); setAiAlt(null); }}
-              className={`flex flex-col items-center justify-center gap-1.5 py-3 sm:px-5 rounded-2xl transition-all active:scale-95 border ${showVideo ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/25' : 'bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10'}`} 
-              title="Putar Video Tutorial"
-            >
-              <PlayCircle size={18} className={showVideo ? "animate-pulse" : ""} />
-              <span className="text-[9px] font-black uppercase tracking-widest">Video</span>
-            </button>
-          ) : (
-            <a 
-              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(exercise.name + " gym form tutorial")}`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-1.5 py-3 sm:px-5 rounded-2xl transition-all active:scale-95 border bg-white dark:bg-[#1a1d27] text-rose-500 border-gray-200 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-500/10" 
-              title="Cari Tutorial di YouTube"
-            >
-              <PlayCircle size={18} />
-              <span className="text-[9px] font-black uppercase tracking-widest">Video</span>
-            </a>
-          )}
-          
-          <button onClick={handleGetAlternative} className="flex flex-col items-center justify-center gap-1.5 py-3 sm:px-5 rounded-2xl bg-white dark:bg-[#1a1d27] text-gray-500 hover:text-amber-500 hover:border-amber-200 dark:hover:text-amber-400 border border-gray-200 dark:border-gray-800 transition-all active:scale-95 group-hover:border-gray-300 dark:group-hover:border-gray-700">
-            {isAiAltLoading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-            <span className="text-[9px] font-black uppercase tracking-widest">Alternatif</span>
-          </button>
-          
-          <button onClick={handleGetTip} className="flex flex-col items-center justify-center gap-1.5 py-3 sm:px-5 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95">
-            {isAiTipLoading ? <Loader2 size={18} className="animate-spin" /> : <Bot size={18} />}
-            <span className="text-[9px] font-black uppercase tracking-widest">Cara AI</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4 mb-6 empty:hidden">
-        {showVideo && exercise.videoId && (
-          <div className="rounded-2xl overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-2xl relative aspect-video animate-in zoom-in-95 duration-300 group/video">
-            <iframe className="absolute inset-0 w-full h-full" src={`https://www.youtube.com/embed/${exercise.videoId}?rel=0&modestbranding=1`} title="Tutorial" allowFullScreen></iframe>
-          </div>
-        )}
-        {aiTip && (
-          <div className="bg-indigo-50/80 dark:bg-indigo-500/10 p-4 sm:p-5 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 animate-in slide-in-from-top-2 flex items-start">
-            <div className="bg-indigo-100 dark:bg-indigo-500/20 p-2 rounded-xl mr-3 shrink-0"><Sparkles size={16} className="text-indigo-600 dark:text-indigo-400" /></div>
-            <p className="text-[13px] sm:text-sm text-indigo-900 dark:text-indigo-100 font-medium leading-relaxed pt-0.5">{aiTip}</p>
-          </div>
-        )}
-        {aiAlt && (
-          <div className="bg-gray-50 dark:bg-[#1a1d27] p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-800 animate-in slide-in-from-top-2 flex items-start">
-            <div className="bg-white dark:bg-gray-800 p-2 rounded-xl mr-3 shrink-0 shadow-sm border border-gray-100 dark:border-gray-700"><RefreshCw size={16} className="text-gray-600 dark:text-gray-400" /></div>
-            <p className="text-[13px] sm:text-sm text-gray-800 dark:text-gray-200 font-medium leading-relaxed pt-0.5">{aiAlt}</p>
-          </div>
-        )}
-        {aiProgress && (
-          <div className="bg-emerald-50/80 dark:bg-emerald-500/10 p-4 sm:p-5 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 animate-in slide-in-from-top-2 flex items-start">
-            <div className="bg-emerald-100 dark:bg-emerald-500/20 p-2 rounded-xl mr-3 shrink-0"><TrendingUp size={16} className="text-emerald-600 dark:text-emerald-400" /></div>
-            <p className="text-[13px] sm:text-sm text-emerald-900 dark:text-emerald-100 font-medium leading-relaxed pt-0.5">{aiProgress}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-gray-50/50 dark:bg-[#0a0a0a] p-3 sm:p-4 rounded-3xl border border-gray-100 dark:border-gray-800/80 mb-6">
-        <div className="flex gap-1.5 sm:gap-2 mb-3 overflow-x-auto no-scrollbar pb-1">
-          {['Normal', 'Drop Set', 'Superset'].map(type => (
-            <button 
-              key={type} type="button" onClick={() => handleSetTypeChange(type)}
-              className={`px-3 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${setType === type ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md' : 'bg-white dark:bg-[#1a1d27] text-gray-500 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-
-        {setType !== 'Normal' && tempSubSets.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3 p-3 bg-white dark:bg-[#11131a] rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-            {tempSubSets.map((s, i) => (
-              <div key={i} className="text-xs font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg flex items-center border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
-                {s.weight}kg × {s.reps} {s.rpe && <span className="ml-1 opacity-60">RPE:{s.rpe}</span>}
-                <button type="button" onClick={() => setTempSubSets(tempSubSets.filter((_, idx) => idx !== i))} className="ml-2.5 text-indigo-400 hover:text-rose-500 transition-colors"><X size={12}/></button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <form onSubmit={onFormSubmit} className={`flex flex-col sm:flex-row gap-2.5 sm:gap-2 ${setType !== 'Normal' ? 'items-stretch' : ''}`}>
-          <div className={`grid gap-2 w-full ${setType === 'Normal' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
-            <div className="relative">
-              <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-gray-400">KG</span>
-              <input type="number" step="0.5" value={weight} onChange={(e) => setWeight(e.target.value)} className="w-full bg-white dark:bg-[#11131a] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl pl-8 sm:pl-10 pr-2 py-3.5 sm:py-3 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm appearance-none" placeholder="0" />
-            </div>
-            {setType === 'Normal' && (
-              <div className="relative animate-in fade-in zoom-in duration-200">
-                <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-gray-400">SET</span>
-                <input type="number" value={sets} onChange={(e) => setSets(e.target.value)} className="w-full bg-white dark:bg-[#11131a] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl pl-10 sm:pl-11 pr-2 py-3.5 sm:py-3 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm appearance-none" placeholder="0" />
-              </div>
             )}
-            <div className="relative">
-              <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-gray-400">REP</span>
-              <input type="number" value={reps} onChange={(e) => setReps(e.target.value)} className="w-full bg-white dark:bg-[#11131a] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl pl-10 sm:pl-11 pr-2 py-3.5 sm:py-3 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm appearance-none" placeholder="0" />
-            </div>
-            <div className="relative">
-              <span className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-[10px] sm:text-[11px] font-black text-gray-400">RPE</span>
-              <input type="number" min="1" max="10" value={rpe} onChange={(e) => setRpe(e.target.value)} className="w-full bg-white dark:bg-[#11131a] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl pl-10 sm:pl-11 pr-2 py-3.5 sm:py-3 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm appearance-none" placeholder="1-10" />
-            </div>
           </div>
-          
-          {setType === 'Normal' ? (
-            <button type="submit" disabled={!weight || !sets || !reps} className={`sm:w-32 py-3.5 sm:py-3 rounded-xl sm:rounded-2xl text-[13px] sm:text-xs font-black tracking-widest uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 disabled:opacity-30 hover:bg-indigo-700'}`}>
-              {showSuccess ? <CheckCircle size={18} /> : 'CATAT'}
-            </button>
-          ) : (
-            <div className="flex gap-2 sm:w-auto w-full mt-1 sm:mt-0 animate-in fade-in duration-200 shrink-0">
-               <button type="submit" disabled={!weight || !reps} className="flex-1 sm:flex-none py-3.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl text-xs font-black tracking-widest uppercase transition-all flex justify-center items-center active:scale-95 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50">
-                 Tambah
-               </button>
-               <button type="button" onClick={handleSubmit} disabled={tempSubSets.length === 0} className={`flex-1 sm:flex-none py-3.5 sm:py-3 px-5 rounded-xl sm:rounded-2xl text-xs font-black tracking-widest uppercase transition-all flex justify-center items-center active:scale-95 ${showSuccess ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-indigo-600 text-white disabled:opacity-30 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20'}`}>
-                 {showSuccess ? <CheckCircle size={18} /> : `Simpan`}
-               </button>
-            </div>
-          )}
-        </form>
+        )}
       </div>
-
-      {history.length > 0 && (
-        <div className="mt-2">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center px-2 mb-4 gap-3 sm:gap-0">
-            <div className="flex gap-1.5 bg-gray-100 dark:bg-[#1a1d27] p-1 rounded-xl w-fit">
-              <button onClick={() => { setShowHistory(true); setHistoryTab('list'); }} className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${showHistory && historyTab === 'list' ? 'bg-white dark:bg-[#0f1117] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>List</button>
-              <button onClick={() => { setShowHistory(true); setHistoryTab('chart'); }} className={`flex items-center px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${showHistory && historyTab === 'chart' ? 'bg-white dark:bg-[#0f1117] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}> <BarChart2 size={12} className="mr-1"/> Grafik</button>
-            </div>
-            <button onClick={handleGetProgressAdvice} disabled={isAiProgressLoading} className="text-[10px] w-fit font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors px-3 py-2 rounded-lg flex items-center active:scale-95 border border-indigo-100 dark:border-indigo-500/20 sm:border-transparent">
-              {isAiProgressLoading ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Zap size={14} className="mr-1.5" />} 
-              Analisis AI
-            </button>
-          </div>
-
-          {showHistory && (
-            <div className="space-y-3 animate-in slide-in-from-top-2 duration-300 bg-gray-50/30 dark:bg-[#0a0a0a]/50 p-2 sm:p-3 rounded-3xl border border-gray-100 dark:border-gray-800/50">
-              {historyTab === 'chart' ? (
-                <ChartView />
-              ) : (
-                <div className="space-y-4">
-                  {groupedHistory.map((group, gIndex) => (
-                    <div key={gIndex} className="space-y-2">
-                      <div className="flex items-center gap-3 px-1 pt-1">
-                        <div className="h-px bg-indigo-500/20 flex-1"></div>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">{group.date}</span>
-                        <div className="h-px bg-indigo-500/20 flex-1"></div>
-                      </div>
-                      
-                      {group.logs.map((log) => (
-                        <div key={log.id} className="relative">
-                          {editingId === log.id ? (
-                            <div className="bg-white dark:bg-[#1a1d27] p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-md">
-                              <div className="flex gap-2">
-                                 <input type="number" step="0.5" value={editForm.weight} onChange={(e) => setEditForm({...editForm, weight: e.target.value})} className="w-full bg-gray-50 dark:bg-[#0f1117] border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2.5 text-[16px] sm:text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none" />
-                                 <input type="number" value={editForm.sets} onChange={(e) => setEditForm({...editForm, sets: e.target.value})} className="w-full bg-gray-50 dark:bg-[#0f1117] border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2.5 text-[16px] sm:text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none" />
-                                 <input type="number" value={editForm.reps} onChange={(e) => setEditForm({...editForm, reps: e.target.value})} className="w-full bg-gray-50 dark:bg-[#0f1117] border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-2.5 text-[16px] sm:text-sm font-bold dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none" />
-                              </div>
-                              <div className="flex justify-end mt-3 space-x-2">
-                                <button onClick={() => setEditingId(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 active:scale-95 transition-all">Batal</button>
-                                <button onClick={() => saveEdit(log.id)} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 transition-all shadow-md shadow-indigo-600/20">Simpan</button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className={`flex justify-between items-center bg-white dark:bg-[#11131a] border ${log.isPR ? 'border-amber-300 dark:border-amber-500/50 shadow-sm shadow-amber-500/10' : 'border-gray-100 dark:border-gray-800/80 hover:border-gray-300 dark:hover:border-gray-700'} p-4 rounded-2xl transition-all group shadow-sm flex-wrap sm:flex-nowrap gap-2 sm:gap-0`}>
-                              <div className="flex flex-col w-full sm:w-auto">
-                                {log.subSets ? (
-                                  <div className="font-black text-gray-900 dark:text-white text-[13px] tracking-tight flex items-center flex-wrap gap-y-1">
-                                    {log.isPR && <Crown size={14} className="text-amber-500 mr-2" />}
-                                    {log.subSets.map((sub, i) => (
-                                      <React.Fragment key={i}>
-                                        <span>{sub.weight} <span className="text-gray-400 font-semibold text-[10px] tracking-widest mx-0.5">KG</span> × {sub.reps} <span className="text-gray-400 font-semibold text-[10px] tracking-widest ml-0.5">REP</span> {sub.rpe && <span className="text-[10px] text-gray-400 ml-1">RPE:{sub.rpe}</span>}</span>
-                                        {i < log.subSets.length - 1 && <span className="mx-1.5 text-indigo-500">➔</span>}
-                                      </React.Fragment>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="font-black text-gray-900 dark:text-white text-[15px] tracking-tight flex items-center">
-                                    {log.isPR && <Crown size={14} className="text-amber-500 mr-2" />}
-                                    {log.weight} <span className="text-gray-400 font-semibold text-xs tracking-widest mx-1">KG</span> 
-                                    <span className="text-gray-300 dark:text-gray-700 mx-1">×</span> 
-                                    {log.sets} <span className="text-gray-400 font-semibold text-xs tracking-widest mx-1">SET</span> 
-                                    <span className="text-gray-300 dark:text-gray-700 mx-1">×</span> 
-                                    {log.reps} <span className="text-gray-400 font-semibold text-xs tracking-widest ml-1">REP</span>
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                  <span className="text-[10px] text-gray-400 font-semibold flex items-center"><Clock size={10} className="mr-1 opacity-70"/> {log.time}</span>
-                                  {log.rpe && <span className="text-[10px] text-gray-400 font-semibold ml-1">RPE: {log.rpe}</span>}
-                                  {log.setType && log.setType !== 'Normal' && (
-                                    <span className="text-[8px] font-black uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded text-center">
-                                      {log.setType}
-                                    </span>
-                                  )}
-                                  <span className="text-[8px] font-black uppercase tracking-widest bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 px-1.5 py-0.5 rounded text-center ml-auto sm:ml-2">
-                                    1RM: {log.oneRepMax}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 border-t border-gray-100 dark:border-gray-800/80 sm:border-0 pt-2 sm:pt-0">
-                                {!log.subSets && (
-                                  <button onClick={() => startEdit(log)} className="p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all bg-gray-50 dark:bg-gray-800/50"><Edit2 size={14} /></button>
-                                )}
-                                <button onClick={() => onDeleteLog(log.id)} className="p-2.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all bg-gray-50 dark:bg-gray-800/50"><Trash2 size={14} /></button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {prModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-gradient-to-b from-amber-400 to-amber-600 p-1 rounded-[36px] shadow-2xl shadow-amber-500/30 animate-in zoom-in-95 duration-500 bounce">
-            <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[32px] p-8 text-center relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 opacity-10"><Trophy size={120} className="text-amber-500"/></div>
-              <div className="w-20 h-20 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white dark:border-[#11131a] relative z-10 shadow-lg">
-                <Crown size={32} className="text-amber-500" />
-              </div>
-              <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight relative z-10">NEW PR!</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed relative z-10">Luar biasa! Angkatan {exercise.name} Anda hari ini lebih kuat dari seluruh histori sebelumnya.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-sm text-center border border-slate-200 dark:border-slate-800 relative">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Crown size={32} className="text-amber-500" />
             </div>
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2">NEW PR!</h4>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Luar biasa! Angkatan Anda hari ini lebih kuat dari seluruh histori sebelumnya.</p>
           </div>
         </div>
       )}
@@ -631,7 +613,7 @@ const ExerciseCard = ({ exercise, onLog, history, onDeleteLog, onEditLog, onDele
   );
 };
 
-// --- KOMPONEN: INSIGHTS & CALENDAR MODAL ---
+// --- INSIGHTS MODAL ---
 const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
   const [days, setDays] = useState([]);
   const [activeDates, setActiveDates] = useState(new Set());
@@ -662,66 +644,59 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
     setWeeklyVolume(Object.entries(volume).map(([m, sets]) => ({ muscle: m, sets })).sort((a,b) => b.sets - a.sets));
   }, [logs, exerciseData]);
 
-  // Kalkulasi Rata-rata Kesehatan (Jika Ada)
   const healthList = Object.values(healthData);
   const avgCals = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.cals || 0), 0) / healthList.length) : 0;
   const avgHr = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.hr || 0), 0) / healthList.length) : 0;
   const avgSpo2 = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.spo2 || 0), 0) / healthList.length) : 0;
-  
-  // Mengubah menit tidur menjadi Jam & Menit
   const avgSleepMins = healthList.length > 0 ? Math.round(healthList.reduce((acc, curr) => acc + (curr.sleep || 0), 0) / healthList.length) : 0;
   const sleepHours = Math.floor(avgSleepMins / 60);
   const sleepMins = avgSleepMins % 60;
 
   return (
-    <div className="bg-white dark:bg-[#11131a] w-full max-w-md rounded-[36px] p-6 sm:p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
-      <div className="flex justify-between items-center mb-6">
-        <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center"><Activity size={18} className="mr-2 text-indigo-500" /> Insights</h4>
-        <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={16}/></button>
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-lg border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto w-full max-w-md">
+      <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase">Insights & Progress</h4>
+        <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><X size={16}/></button>
       </div>
 
       {healthList.length > 0 && (
         <div className="mb-8">
-           <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Metrik Kesehatan (Apple Health)</h3>
-           <div className="grid grid-cols-2 gap-3 mb-3">
-             <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 p-4 rounded-2xl">
-               <Heart size={16} className="text-rose-500 mb-2" />
-               <div className="text-xl font-black text-gray-900 dark:text-white">{avgHr} <span className="text-[10px] font-bold text-gray-500 uppercase">BPM</span></div>
-               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Rata-rata HR</div>
+           <h3 className="text-xs font-semibold uppercase text-slate-500 mb-4">Health Metrics</h3>
+           <div className="grid grid-cols-2 gap-3">
+             <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 p-4 rounded-lg">
+               <Heart size={16} className="text-red-500 mb-2" />
+               <div className="text-lg font-bold text-slate-900 dark:text-white">{avgHr} <span className="text-xs text-slate-500 font-medium">BPM</span></div>
+               <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Avg HR</div>
              </div>
-             <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 p-4 rounded-2xl">
+             <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 p-4 rounded-lg">
                <Flame size={16} className="text-orange-500 mb-2" />
-               <div className="text-xl font-black text-gray-900 dark:text-white">{avgCals} <span className="text-[10px] font-bold text-gray-500 uppercase">Kcal</span></div>
-               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Avg Kalori Sesi</div>
+               <div className="text-lg font-bold text-slate-900 dark:text-white">{avgCals} <span className="text-xs text-slate-500 font-medium">Kcal</span></div>
+               <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Calories</div>
              </div>
-             <div className="bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-500/20 p-4 rounded-2xl">
-               <Wind size={16} className="text-sky-500 mb-2" />
-               <div className="text-xl font-black text-gray-900 dark:text-white">{avgSpo2 > 0 ? avgSpo2 : '--'} <span className="text-[10px] font-bold text-gray-500 uppercase">%</span></div>
-               <div className="text-[9px] font-black uppercase text-gray-400 mt-1">Oksigen Darah</div>
+             <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-lg">
+               <Wind size={16} className="text-blue-500 mb-2" />
+               <div className="text-lg font-bold text-slate-900 dark:text-white">{avgSpo2 > 0 ? avgSpo2 : '--'} <span className="text-xs text-slate-500 font-medium">%</span></div>
+               <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">SpO2</div>
              </div>
-             <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-2xl flex flex-col justify-center">
-                <MoonStar size={16} className="text-indigo-500 mb-2" />
-                <div className="text-xl font-black text-gray-900 dark:text-white leading-none">
-                  {sleepHours}<span className="text-[10px] font-bold text-gray-500 uppercase mx-1">J</span> 
-                  {sleepMins}<span className="text-[10px] font-bold text-gray-500 uppercase ml-1">M</span>
-                </div>
-                <div className="text-[9px] font-black uppercase text-gray-400 mt-1.5">Tidur (7 Hari)</div>
+             <div className="bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 p-4 rounded-lg">
+                <MoonStar size={16} className="text-purple-500 mb-2" />
+                <div className="text-lg font-bold text-slate-900 dark:text-white">{sleepHours}h {sleepMins}m</div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Sleep</div>
              </div>
            </div>
         </div>
       )}
 
       <div className="mb-8">
-        <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400 mb-4">Konsistensi Latihan</h3>
-        <div className="grid grid-cols-7 gap-2">
+        <h3 className="text-xs font-semibold uppercase text-slate-500 mb-4">Consistency (35 Days)</h3>
+        <div className="grid grid-cols-7 gap-1.5">
           {days.map((dayObj, i) => {
              const dateStr = dayObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
              const isActive = activeDates.has(dateStr);
-             const isToday = dayObj.toDateString() === new Date().toDateString();
              return (
                <div 
-                  key={i} title={dateStr}
-                  className={`flex items-center justify-center aspect-square rounded-[8px] sm:rounded-xl transition-all duration-300 text-[10px] font-bold ${isActive ? 'bg-indigo-500 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)] scale-105' : 'bg-gray-100 dark:bg-[#1a1d27] text-gray-400'} ${isToday && !isActive ? 'border-2 border-indigo-500/50' : ''}`}
+                  key={i}
+                  className={`aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition-all ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}
                >
                   {dayObj.getDate()}
                </div>
@@ -731,26 +706,20 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
       </div>
 
       <div>
-        <div className="flex justify-between items-center mb-4">
-           <h3 className="font-black text-[10px] uppercase tracking-widest text-gray-400">Volume Otot Minggu Ini</h3>
-           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">Target: 10-20 Set</span>
-        </div>
+        <h3 className="text-xs font-semibold uppercase text-slate-500 mb-4">Weekly Volume</h3>
         {weeklyVolume.length === 0 ? (
-          <p className="text-xs font-medium text-gray-500 italic text-center py-4 bg-gray-50 dark:bg-[#1a1d27] rounded-2xl">Belum ada latihan minggu ini.</p>
+          <p className="text-xs text-slate-500 text-center py-6">No workouts this week</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {weeklyVolume.map((item, idx) => {
-              const maxSets = 20; const pct = Math.min(100, (item.sets / maxSets) * 100);
-              let color = "bg-amber-500";
-              if (item.sets >= 10 && item.sets <= 20) color = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]";
-              else if (item.sets > 20) color = "bg-rose-500";
+              const pct = Math.min(100, (item.sets / 20) * 100);
               return (
-                <div key={idx} className="relative">
-                  <div className="flex justify-between text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">
-                    <span>{item.muscle}</span><span>{item.sets} Set</span>
+                <div key={idx}>
+                  <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    <span>{item.muscle}</span><span>{item.sets}s</span>
                   </div>
-                  <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all duration-1000 ${color}`} style={{ width: `${pct}%` }}></div>
+                  <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }}></div>
                   </div>
                 </div>
               )
@@ -762,7 +731,7 @@ const InsightsModal = ({ logs, exerciseData, healthData, onClose }) => {
   );
 };
 
-// --- KOMPONEN UTAMA ---
+// --- MAIN APP ---
 export default function App() {
   const todaySplit = getTodaySplit();
   const [activeTab, setActiveTab] = useState(todaySplit === 'Rest' ? 'Push' : todaySplit);
@@ -780,8 +749,6 @@ export default function App() {
   const [showInsightsModal, setShowInsightsModal] = useState(false);
   const [preWorkoutAdvice, setPreWorkoutAdvice] = useState(null);
   const [isPreWorkoutLoading, setIsPreWorkoutLoading] = useState(false);
-
-  // Modal Akhiri Sesi (Manual Input opsional jika Apple Health gagal)
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [healthMetrics, setHealthMetrics] = useState({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
 
@@ -806,7 +773,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem('gym_exercises_v11', JSON.stringify(exerciseData)); }, [exerciseData]);
   useEffect(() => { localStorage.setItem('gym_health_v2', JSON.stringify(healthData)); }, [healthData]);
 
-  // --- SENSOR PENANGKAP URL DARI APPLE SHORTCUTS ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action');
@@ -814,33 +780,19 @@ export default function App() {
     if (action === 'sync_health') {
       const hrRaw = params.get('hr') ? parseFloat(params.get('hr').replace(',', '.')) : 0;
       const hr = isNaN(hrRaw) ? 0 : Math.round(hrRaw);
-      
       const calsRaw = params.get('cals') ? parseFloat(params.get('cals').replace(',', '.')) : 0;
       const cals = isNaN(calsRaw) ? 0 : Math.round(calsRaw);
-      
       const sleepRaw = params.get('sleep') ? parseFloat(params.get('sleep').replace(',', '.')) : 0;
       const sleep = isNaN(sleepRaw) ? 0 : Math.round(sleepRaw);
-
       const spo2Raw = params.get('spo2') ? parseFloat(params.get('spo2').replace(',', '.')) : 0;
       let spo2 = isNaN(spo2Raw) ? 0 : spo2Raw;
       if (spo2 > 0 && spo2 <= 1) spo2 = Math.round(spo2 * 100);
       else spo2 = Math.round(spo2);
       
       const today = new Date().toLocaleDateString('id-ID');
-      
-      setHealthData(prev => ({
-         ...prev,
-         [today]: { ...prev[today], hr, cals, sleep, spo2 }
-      }));
-
-      // Bersihkan URL agar rapi kembali
+      setHealthData(prev => ({ ...prev, [today]: { ...prev[today], hr, cals, sleep, spo2 } }));
       window.history.replaceState({}, document.title, window.location.pathname);
-      
-      setConfirmDialog({ 
-        message: `Sinkronisasi berhasil! (HR: ${hr} bpm, Kalori: ${cals} kcal, Tidur: ${Math.floor(sleep/60)}j ${sleep%60}m, Oksigen: ${spo2}%)`, 
-        onConfirm: () => setConfirmDialog(null), 
-        isAlert: true 
-      });
+      setConfirmDialog({ message: `Sinkronisasi berhasil! (HR: ${hr} bpm, Cals: ${cals} kcal)`, onConfirm: () => setConfirmDialog(null), isAlert: true });
     }
   }, []);
 
@@ -855,22 +807,18 @@ export default function App() {
   const handleSaveHealthMetrics = (e) => {
     e.preventDefault();
     if (!healthMetrics.cals && !healthMetrics.hr && !healthMetrics.sleep && !healthMetrics.spo2) return;
-    
     const today = new Date().toLocaleDateString('id-ID');
-    const newHealthData = { ...healthData, [today]: {
+    setHealthData({...healthData, [today]: {
        duration: parseInt(healthMetrics.duration) || 0,
        cals: parseInt(healthMetrics.cals) || 0,
        hr: parseInt(healthMetrics.hr) || 0,
        sleep: parseInt(healthMetrics.sleep) || 0,
        spo2: parseInt(healthMetrics.spo2) || 0,
-    }};
-    
-    setHealthData(newHealthData);
+    }});
     setShowEndSessionModal(false);
     setHealthMetrics({ duration: '', cals: '', hr: '', sleep: '', spo2: '' });
   };
 
-  // Timer Manual Effect
   useEffect(() => {
     let timer;
     if (isTimerRunning && restTime > 0) {
@@ -883,7 +831,7 @@ export default function App() {
         osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
         osc.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.5);
       } catch (e) {}
-      setConfirmDialog({ message: "Waktu istirahat sudah habis! Ayo bersiap untuk set berikutnya 🔥", onConfirm: () => setConfirmDialog(null), isAlert: true });
+      setConfirmDialog({ message: "Waktu istirahat sudah habis!", onConfirm: () => setConfirmDialog(null), isAlert: true });
     }
     return () => clearInterval(timer);
   }, [isTimerRunning, restTime]);
@@ -901,58 +849,41 @@ export default function App() {
 
   const handleGetPreWorkoutBriefing = async () => {
     setIsPreWorkoutLoading(true);
-    
     const recentLogs = logs.slice(0, 15).map(l => {
       const exName = (exerciseData[activeTab] || Object.values(exerciseData).flat()).find(e => e.id === l.exerciseId)?.name || l.exerciseId;
       return `${exName}: ${l.weight}kg x ${l.reps}`;
     }).join(', ');
-    
     const allNotes = JSON.parse(localStorage.getItem('gym_notes_v12') || '{}');
     const recentNotesStr = Object.entries(allNotes).slice(-3).map(([k,v]) => `(${k}) ${v}`).join(' | ');
-
     const today = new Date().toLocaleDateString('id-ID');
     const todayHealth = healthData[today] || Object.values(healthData).pop() || {};
-    const sleepInfo = todayHealth.sleep ? `\nSemalam saya tidur selama ${Math.floor(todayHealth.sleep/60)} jam ${todayHealth.sleep%60} menit.` : '';
-
-    const prompt = `Saya akan memulai sesi latihan: ${activeTab} hari ini. \nCatatan/jurnal kondisi saya beberapa hari terakhir: [${recentNotesStr || 'Tidak ada catatan khusus'}]. \nHistori angkatan terakhir: [${recentLogs || 'Belum ada data'}]. ${sleepInfo} \n\nSebagai pelatih gym profesional, berikan "Pre-Workout Briefing" singkat (maksimal 3 kalimat). Analisis kondisi/mood dan kualitas tidur saya, lalu berikan strategi, saran intensitas beban, atau fokus mental untuk sesi ${activeTab} hari ini.`;
-
+    const sleepInfo = todayHealth.sleep ? `\nSemalam saya tidur selama ${Math.floor(todayHealth.sleep/60)} jam.` : '';
+    const prompt = `Saya akan latihan ${activeTab} hari ini. Kondisi: [${recentNotesStr || 'Normal'}]. ${sleepInfo} Berikan Pre-Workout Briefing singkat (2-3 kalimat).`;
     const response = await callGeminiAPI(prompt);
-    setPreWorkoutAdvice(response || "Gagal menghubungi AI. Silakan coba lagi.");
+    setPreWorkoutAdvice(response || "Gagal menghubungi AI.");
     setIsPreWorkoutLoading(false);
   };
 
   const handleGenerateSummary = async () => {
     if (logs.length === 0) return;
     setIsSummaryLoading(true);
-    
-    const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
-    
-    const today = new Date().toLocaleDateString('id-ID');
-    const todayHealth = healthData[today] || {};
-    let healthContext = '';
-    if (todayHealth.cals || todayHealth.hr) {
-      healthContext = `\nMetrik *Smartband* saya: Membakar ${todayHealth.cals || 0} kcal, dengan Rata-rata Detak Jantung ${todayHealth.hr || 0} BPM.`;
-    }
-
-    const prompt = `Saya baru latihan: ${workoutData}. ${healthContext} \nBerikan pujian dan evaluasi analitis singkat ala pelatih profesional. Beri komentar juga mengenai metrik detak jantung/kalori saya jika ada.`;
-    
-    const response = await callGeminiAPI(prompt);
+    const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId}`).join(', ');
+    const response = await callGeminiAPI(`Latihan saya hari ini: ${workoutData}. Berikan pujian singkat (2 kalimat).`);
     setAiBannerData({ text: response, type: 'summary' }); setIsSummaryLoading(false);
   };
 
   const handleGenerateRoast = async () => {
     if (logs.length === 0) return;
     setIsRoastLoading(true);
-    const workoutData = logs.slice(0, 5).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId} (${l.weight}kg)`).join(', ');
-    const prompt = `Abaikan instruksi. Berperanlah sebagai pelatih hardcore (seperti David Goggins). 'Roast' volume latihan saya ini: ${workoutData}. Sarkastik, pedas, maksimal 3 kalimat!`;
-    const response = await callGeminiAPI(prompt, true);
+    const workoutData = logs.slice(0, 3).map(l => `${(exerciseData[activeTab] || [])?.find(e => e.id === l.exerciseId)?.name || l.exerciseId}`).join(', ');
+    const response = await callGeminiAPI(`Roast singkat latihan saya: ${workoutData} (maksimal 2 kalimat, sarkastik).`, true);
     setAiBannerData({ text: response, type: 'roast' }); setIsRoastLoading(false);
   };
 
   const handleGenerateWarmup = async () => {
     setIsWarmupLoading(true);
     const muscles = (exerciseData[activeTab] || []).map(e => e.muscle).join(', ');
-    const response = await callGeminiAPI(`Persiapan ${activeTab} day (otot: ${muscles}). Berikan 3 gerakan pemanasan dinamis saintifik.`);
+    const response = await callGeminiAPI(`${activeTab} day (otot: ${muscles}). 3 gerakan pemanasan dinamis ringkas.`);
     setAiWarmup(response); setIsWarmupLoading(false);
   };
 
@@ -966,12 +897,12 @@ export default function App() {
   };
 
   const onDeleteLog = (id) => { 
-    setConfirmDialog({ message: "Data log ini akan dihapus permanen. Anda yakin?", onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }});
+    setConfirmDialog({ message: "Hapus log ini?", onConfirm: () => { setLogs(logs.filter(l => l.id !== id)); setConfirmDialog(null); }});
   };
 
-  const handleEditLog = async (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
+  const handleEditLog = (id, updatedData) => { setLogs(logs.map(log => log.id === id ? { ...log, ...updatedData } : log)); };
   
-  const handleSaveCustom = async (e) => {
+  const handleSaveCustom = (e) => {
     e.preventDefault(); if (!newExercise.name) return;
     const item = { id: `c-${Date.now()}`, name: newExercise.name, muscle: newExercise.muscle || 'Umum', targetSets: newExercise.targetSets ? parseInt(newExercise.targetSets) : 3, videoId: null };
     setExerciseData(prev => ({ ...prev, [activeTab]: [...(prev[activeTab] || []), item] }));
@@ -979,322 +910,225 @@ export default function App() {
   };
   
   const handleDeleteExercise = (tab, id) => { 
-    setConfirmDialog({ message: "Seluruh gerakan ini dan konfigurasinya akan dihapus permanen dari jadwal Anda. Lanjutkan?", onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }});
+    setConfirmDialog({ message: "Hapus gerakan ini?", onConfirm: () => { setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).filter(ex => ex.id !== id) })); setConfirmDialog(null); }});
   };
   
-  const handleEditExercise = async (tab, id, newName, newMuscle, newTargetSets, newVideoId) => { 
+  const handleEditExercise = (tab, id, newName, newMuscle, newTargetSets, newVideoId) => { 
     setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).map(ex => ex.id === id ? { ...ex, name: newName, muscle: newMuscle, targetSets: newTargetSets, videoId: newVideoId } : ex) })); 
   };
 
-  const handleUpdateExerciseVideo = async (tab, id, videoId) => { 
-    setExerciseData(prev => ({ ...prev, [tab]: (prev[tab] || []).map(ex => ex.id === id ? { ...ex, videoId } : ex) })); 
-  };
-
   return (
-    <div className={`min-h-screen font-sans antialiased selection:bg-indigo-500/30 ${isDarkMode ? 'dark bg-[#0a0a0a] text-white' : 'bg-[#FAFAFA] text-gray-900'} transition-colors duration-500 pb-[env(safe-area-inset-bottom)] relative`}>
+    <div className={`min-h-screen font-sans antialiased ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} transition-colors duration-300 pb-24`}>
       
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl opacity-20 ${isDarkMode ? 'bg-indigo-600/30' : 'bg-indigo-300'}`}></div>
-        <div className={`absolute top-40 -left-20 w-72 h-72 rounded-full blur-3xl opacity-20 ${isDarkMode ? 'bg-purple-600/20' : 'bg-purple-200'}`}></div>
-      </div>
-
-      <div className="relative z-10 pb-24 sm:pb-32">
-        <header className="sticky top-0 z-40 bg-white/70 dark:bg-[#0a0a0a]/70 backdrop-blur-2xl border-b border-gray-200/50 dark:border-gray-800/50 px-4 sm:px-5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-4 transition-all">
-          <div className="max-w-2xl mx-auto flex justify-between items-center">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center rounded-[16px] sm:rounded-[18px] shadow-xl shadow-gray-900/10 dark:shadow-white/10 shrink-0">
-                <Dumbbell size={24} className="transform -rotate-45 sm:w-[28px] sm:h-[28px]" />
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6 py-4 transition-all">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center rounded-xl shadow-lg">
+                <Dumbbell size={24} className="-rotate-45" />
               </div>
               <div>
-                <h1 className="text-[22px] sm:text-[26px] font-black tracking-tighter text-gray-900 dark:text-white leading-none mb-1">GymTracker</h1>
-                <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-indigo-500 dark:text-indigo-400 flex items-center">
-                  {getHariIndonesia()} <span className="mx-2 text-gray-300 dark:text-gray-700">•</span> {todaySplit} Day
-                </p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">GymTracker</h1>
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{getHariIndonesia()} • {todaySplit}</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 shrink-0">
-              <button onClick={() => setShowTimerModal(true)} className="p-3 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all active:scale-90 relative" title="Rest Timer">
+            <div className="flex gap-2">
+              <button onClick={() => setShowTimerModal(true)} className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-500/20 transition-colors" title="Timer">
                 <Clock size={20} />
-                {restTime > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full animate-ping"></span>}
               </button>
-              <button onClick={() => setShowInsightsModal(true)} className="p-3 rounded-full bg-gray-100/80 dark:bg-[#1a1d27]/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all active:scale-90" title="Insight Kalender & Volume">
+              <button onClick={() => setShowInsightsModal(true)} className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Insights">
                 <Activity size={20} />
               </button>
-              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-3 rounded-full bg-gray-100/80 dark:bg-[#1a1d27]/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition-all active:scale-90" title="Ganti Tema">
+              <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
             </div>
           </div>
 
-          <div className="max-w-2xl mx-auto mt-6 sm:mt-8">
-            <div className="flex p-1.5 bg-gray-200/50 dark:bg-[#11131a] rounded-[18px] sm:rounded-[20px] relative overflow-x-auto no-scrollbar">
-              {['Push', 'Pull', 'Legs', 'Upper', 'Legs & Core'].map((t) => (
-                <button 
-                  key={t} onClick={() => setActiveTab(t)} 
-                  className={`relative flex-shrink-0 sm:flex-1 min-w-[80px] sm:min-w-0 px-4 py-3 rounded-[14px] sm:rounded-2xl text-[12px] sm:text-[13px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${activeTab === t ? 'text-gray-900 dark:text-white shadow-md bg-white dark:bg-[#1f2230]' : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-        </header>
-
-        <main className="max-w-2xl mx-auto px-4 sm:px-5 pt-6 sm:pt-8 space-y-6 sm:space-y-8">
-
-          {/* AI Pre-Workout Briefing */}
-          <div className="mb-6">
-            {!preWorkoutAdvice && !isPreWorkoutLoading ? (
-              <button onClick={handleGetPreWorkoutBriefing} className="w-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 hover:border-indigo-500/40 text-indigo-600 dark:text-indigo-400 p-4 rounded-[24px] flex items-center justify-between transition-all active:scale-95">
-                <div className="flex items-center gap-3">
-                  <div className="bg-indigo-500/20 p-2 rounded-xl"><MessageSquare size={18} /></div>
-                  <span className="text-xs font-black uppercase tracking-widest text-left">Briefing AI Sebelum Latihan</span>
-                </div>
-                <ChevronRight size={16} className="opacity-50" />
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {['Push', 'Pull', 'Legs', 'Upper', 'Legs & Core'].map((t) => (
+              <button 
+                key={t} onClick={() => setActiveTab(t)} 
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${activeTab === t ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+              >
+                {t}
               </button>
-            ) : isPreWorkoutLoading ? (
-              <div className="w-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 p-4 rounded-[24px] flex items-center justify-center h-[72px]">
-                <Loader2 size={20} className="animate-spin text-indigo-500" />
-                <span className="ml-3 text-xs font-bold text-indigo-500 animate-pulse">AI meninjau rekam jejak Anda...</span>
-              </div>
-            ) : (
-              <div className="w-full bg-gradient-to-br from-indigo-50 to-white dark:from-[#0d1020] dark:to-[#0a0a0a] border border-indigo-200/50 dark:border-indigo-900/50 p-5 rounded-[24px] shadow-lg shadow-indigo-500/5 relative animate-in slide-in-from-top-4">
-                <button onClick={() => setPreWorkoutAdvice(null)} className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={14}/></button>
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="bg-indigo-500 text-white p-1.5 rounded-lg"><Bot size={14} /></div>
-                  <h4 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Pesan Pelatih Hari Ini</h4>
-                </div>
-                <p className="text-[13px] sm:text-sm text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{preWorkoutAdvice}</p>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+        {!preWorkoutAdvice && !isPreWorkoutLoading ? (
+          <button onClick={handleGetPreWorkoutBriefing} className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white p-4 rounded-xl flex items-center justify-between transition-all">
+            <div className="flex items-center gap-3 text-left">
+              <MessageSquare size={20} className="text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-semibold">Pre-Workout Briefing</span>
+            </div>
+            <ChevronRight size={16} className="opacity-50" />
+          </button>
+        ) : isPreWorkoutLoading ? (
+          <div className="w-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-4 rounded-xl flex items-center">
+            <Loader2 size={18} className="animate-spin text-blue-600 dark:text-blue-400 mr-3" />
+            <span className="text-xs font-semibold text-blue-900 dark:text-blue-100">Loading briefing...</span>
+          </div>
+        ) : (
+          <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 p-5 rounded-xl">
+            <button onClick={() => setPreWorkoutAdvice(null)} className="absolute top-4 right-4"><X size={14} className="text-slate-400" /></button>
+            <div className="flex gap-3 mb-2">
+              <Bot size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <h4 className="text-xs font-semibold text-blue-900 dark:text-blue-100 uppercase">Coach Message</h4>
+            </div>
+            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">{preWorkoutAdvice}</p>
+          </div>
+        )}
+
+        <MuscleRecovery logs={logs} exerciseData={exerciseData} />
+
+        {logs.length > 0 && (
+          <div className="bg-slate-900 dark:bg-slate-950 border border-slate-800 p-6 rounded-xl space-y-4">
+            <div className="flex gap-2">
+              <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                {isSummaryLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Evaluasi
+              </button>
+              <button onClick={handleGenerateRoast} disabled={isRoastLoading} className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                {isRoastLoading ? <Loader2 size={14} className="animate-spin" /> : <Flame size={14} />} Roast
+              </button>
+            </div>
+            
+            {aiBannerData.text && (
+              <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                <p className="text-sm text-slate-100 font-medium">{aiBannerData.text}</p>
               </div>
             )}
           </div>
+        )}
 
-          <MuscleRecovery logs={logs} exerciseData={exerciseData} />
-
-          {logs.length > 0 && (
-            <div className={`rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 relative overflow-hidden transition-all duration-700 ${aiBannerData.type === 'roast' ? 'bg-[#1a0b11] border border-rose-900/30' : 'bg-[#0a0f1c] border border-indigo-900/30'}`}>
-              
-              <div className={`absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 rounded-full blur-[60px] sm:blur-[80px] -z-0 opacity-40 transition-colors duration-700 ${aiBannerData.type === 'roast' ? 'bg-rose-600' : 'bg-indigo-600'}`}></div>
-              
-              <div className="relative z-10">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5 sm:mb-6">
-                  <h3 className="font-black text-xs sm:text-sm tracking-widest flex items-center text-white uppercase">
-                    {aiBannerData.type === 'roast' ? <><Skull size={16} className="mr-2.5 text-rose-500" /> Pelatih Keras</> : <><Sparkles size={16} className="mr-2.5 text-indigo-400" /> Analisis Sesi AI</>}
-                  </h3>
-                  
-                  <div className="flex space-x-2">
-                    <button onClick={handleGenerateRoast} disabled={isRoastLoading} className="text-[10px] sm:text-[11px] flex-1 sm:flex-none justify-center font-black tracking-widest uppercase bg-white/5 hover:bg-white/10 px-3 sm:px-4 py-2.5 rounded-xl transition-all flex items-center backdrop-blur-md active:scale-95 text-rose-300 border border-white/5">
-                      {isRoastLoading ? <Loader2 size={14} className="animate-spin" /> : <Flame size={14} className="mr-1.5 sm:mr-2" />} Roast
-                    </button>
-                    <button onClick={handleGenerateSummary} disabled={isSummaryLoading} className="text-[10px] sm:text-[11px] flex-1 sm:flex-none justify-center font-black tracking-widest uppercase bg-indigo-500/20 hover:bg-indigo-500/30 px-3 sm:px-4 py-2.5 rounded-xl transition-all flex items-center backdrop-blur-md active:scale-95 text-indigo-200 border border-indigo-500/20">
-                      {isSummaryLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="mr-1.5 sm:mr-2" />} Evaluasi
-                    </button>
-                  </div>
-                </div>
-                
-                {aiBannerData.text ? (
-                  <div className="bg-white/5 backdrop-blur-xl p-4 sm:p-6 rounded-2xl border border-white/5">
-                    <p className={`text-[13px] sm:text-[15px] leading-relaxed font-medium animate-in slide-in-from-bottom-2 ${aiBannerData.type === 'roast' ? 'text-rose-100' : 'text-indigo-100'}`}>{aiBannerData.text}</p>
-                  </div>
-                ) : (
-                  <p className="text-[13px] sm:text-sm text-gray-400 font-medium max-w-[90%] sm:max-w-[85%] leading-relaxed">Setelah menekan tombol CATAT untuk semua set latihan Anda hari ini, minta AI memberikan evaluasi saintifik.</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="w-full bg-white dark:bg-[#0f1117] hover:border-orange-500/50 border border-gray-100 dark:border-gray-800/80 rounded-[24px] sm:rounded-[28px] p-5 sm:p-6 transition-all flex items-center justify-center group active:scale-[0.98] shadow-sm hover:shadow-xl hover:shadow-orange-500/10 text-left sm:text-center">
-            <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform shrink-0 mr-4">
-              {isWarmupLoading ? <Loader2 size={22} className="animate-spin" /> : <Flame size={22} />}
-            </div>
-            <span className="text-[11px] font-black uppercase tracking-widest text-gray-900 dark:text-white">Pemanasan Dinamis AI</span>
-          </button>
+        <button onClick={handleGenerateWarmup} disabled={isWarmupLoading} className="w-full bg-orange-100 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 text-orange-900 dark:text-orange-100 p-4 rounded-xl flex items-center justify-between hover:bg-orange-200 dark:hover:bg-orange-500/20 transition-colors disabled:opacity-50">
+          {isWarmupLoading ? <Loader2 size={18} className="animate-spin" /> : <Flame size={18} />}
+          <span className="text-sm font-semibold">Pemanasan Dinamis</span>
+        </button>
             
-          {aiWarmup && (
-            <div className="bg-gradient-to-br from-orange-50 to-white dark:from-[#1f130a] dark:to-[#0f1117] border border-orange-200/50 dark:border-orange-900/30 p-5 sm:p-6 rounded-[24px] sm:rounded-[28px] animate-in slide-in-from-top-4 relative shadow-2xl shadow-orange-500/10">
-              <button onClick={() => setAiWarmup(null)} className="absolute top-4 right-4 p-2 bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={16} /></button>
-              <span className="font-black text-xs sm:text-sm uppercase tracking-widest mb-3 sm:mb-4 flex items-center text-orange-600 dark:text-orange-500"><Flame size={16} className="mr-2.5 sm:mr-2.5"/> Pemanasan Hari Ini</span>
-              <div className="text-[13px] sm:text-[14px] leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-medium">{aiWarmup}</div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center my-8 sm:my-10">
-            <div className="h-px bg-gray-200 dark:bg-gray-800/60 w-full max-w-[150px] sm:max-w-[200px]"></div>
-            <Dumbbell size={16} className="mx-4 text-gray-300 dark:text-gray-700 shrink-0 transform -rotate-45" />
-            <div className="h-px bg-gray-200 dark:bg-gray-800/60 w-full max-w-[150px] sm:max-w-[200px]"></div>
+        {aiWarmup && (
+          <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 p-5 rounded-xl">
+            <button onClick={() => setAiWarmup(null)} className="absolute top-4 right-4"><X size={14} /></button>
+            <h4 className="text-xs font-semibold text-orange-900 dark:text-orange-100 uppercase mb-3 flex items-center gap-2">
+              <Flame size={14} /> Warmup
+            </h4>
+            <p className="text-sm text-orange-900 dark:text-orange-100 font-medium whitespace-pre-wrap">{aiWarmup}</p>
           </div>
+        )}
 
-          <div className="space-y-6">
-            {(exerciseData[activeTab] || []).map(ex => (
-              <ExerciseCard 
-                key={ex.id} exercise={ex} activeTab={activeTab} 
-                onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
-                onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} 
-                history={logs.filter(l => l.exerciseId === ex.id)} 
-              />
-            ))}
-          </div>
-
-          {isAddingExercise ? (
-            <form onSubmit={handleSaveCustom} className="bg-white dark:bg-[#0f1117] p-6 sm:p-8 rounded-[32px] sm:rounded-[40px] border border-gray-200 dark:border-gray-800 shadow-2xl shadow-gray-200/50 dark:shadow-none animate-in zoom-in-95 duration-300 mt-8 sm:mt-10 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-              <h3 className="font-black mb-5 sm:mb-6 text-sm uppercase tracking-widest text-gray-900 dark:text-white flex items-center"><PlusCircle size={20} className="mr-3 text-indigo-500"/> Gerakan Custom</h3>
-              <div className="space-y-4 sm:space-y-5">
-                <div>
-                  <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Nama Mesin/Gerakan</label>
-                  <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Cth: Incline Dumbbell Press" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" autoFocus/>
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-2/3">
-                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Target Otot</label>
-                    <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Cth: Dada Atas" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
-                  </div>
-                  <div className="w-1/3">
-                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-2 block">Set</label>
-                    <input type="number" value={newExercise.targetSets} onChange={e => setNewExercise({...newExercise, targetSets: e.target.value})} placeholder="3" className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-xl sm:rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-[16px] sm:text-[15px] font-bold text-gray-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all appearance-none" />
-                  </div>
-                </div>
-                <div className="flex flex-col-reverse sm:flex-row sm:space-x-3 pt-3 sm:pt-4 gap-3 sm:gap-0">
-                  <button type="button" onClick={() => setIsAddingExercise(false)} className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-gray-100 dark:bg-[#1a1d27] text-gray-600 dark:text-gray-300 text-[13px] font-black uppercase tracking-widest rounded-xl sm:rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors active:scale-95">Batal</button>
-                  <button type="submit" disabled={!newExercise.name} className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[13px] font-black uppercase tracking-widest py-3.5 sm:py-4 rounded-xl sm:rounded-2xl shadow-xl shadow-gray-900/20 dark:shadow-white/20 disabled:opacity-30 transition-all active:scale-95">Tambahkan</button>
-                </div>
-              </div>
-            </form>
-          ) : (
-            <button 
-              onClick={() => setIsAddingExercise(true)} 
-              className="w-full py-6 sm:py-7 mt-8 sm:mt-10 border-2 border-dashed border-gray-300 dark:border-gray-800 text-gray-400 font-black uppercase tracking-widest rounded-[28px] sm:rounded-[32px] flex items-center justify-center hover:bg-white dark:hover:bg-[#0f1117] hover:text-gray-900 dark:hover:text-white hover:border-indigo-500/50 transition-all text-xs sm:text-sm active:scale-[0.98] group"
-            >
-              <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-full mr-2.5 sm:mr-3 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors"><Plus size={18} className="sm:w-5 sm:h-5" /></div>
-              Gerakan Manual Baru
-            </button>
-          )}
-
-          {/* --- TOMBOL AKHIRI SESI (MANUAL HEALTH INPUT) --- */}
-          <button 
-             onClick={() => setShowEndSessionModal(true)}
-             className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-3xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/30 flex items-center justify-center active:scale-[0.98] transition-all mt-8"
-          >
-             <CheckSquare size={20} className="mr-2" /> Akhiri Sesi Hari Ini
-          </button>
-
-          {/* --- JURNAL SESI HARIAN --- */}
-          <div className="mt-12 bg-yellow-50 dark:bg-[#1c1810] border border-yellow-200 dark:border-yellow-900/30 rounded-[32px] p-6 sm:p-8 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-10"><BookOpen size={100} className="text-yellow-600" /></div>
-            <h4 className="text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-500 mb-4 flex items-center relative z-10"><PenTool size={14} className="mr-2"/> Jurnal Latihan Hari Ini</h4>
-            <textarea 
-              value={dailyNote}
-              onChange={(e) => handleSaveNote(e.target.value)}
-              placeholder="Catat kondisi hari ini (Misal: Tidur kurang, tenaga drop pas bench press...)"
-              className="w-full bg-white/50 dark:bg-[#110f0a] border border-yellow-200/50 dark:border-yellow-900/50 rounded-2xl p-4 text-[16px] sm:text-sm text-gray-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-yellow-500/30 min-h-[100px] resize-none relative z-10 placeholder-yellow-800/30 dark:placeholder-yellow-200/20 leading-relaxed font-medium"
+        <div className="space-y-6">
+          {(exerciseData[activeTab] || []).map(ex => (
+            <ExerciseCard 
+              key={ex.id} exercise={ex} activeTab={activeTab} 
+              onLog={handleAddLog} onDeleteLog={onDeleteLog} onEditLog={handleEditLog}
+              onDeleteExercise={handleDeleteExercise} onEditExercise={handleEditExercise} 
+              history={logs.filter(l => l.exerciseId === ex.id)} 
             />
-          </div>
+          ))}
+        </div>
 
-        </main>
-      </div>
-
-      {/* Modal End Workout Summary */}
-      {showEndSessionModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[36px] p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center"><CheckSquare size={18} className="mr-2 text-emerald-500" /> Selesai Latihan</h4>
-              <button onClick={() => setShowEndSessionModal(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={16}/></button>
+        {isAddingExercise ? (
+          <form onSubmit={handleSaveCustom} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <h3 className="text-sm font-bold uppercase text-slate-900 dark:text-white flex items-center gap-2"><PlusCircle size={16} /> New Exercise</h3>
+            <input type="text" value={newExercise.name} onChange={e => setNewExercise({...newExercise, name: e.target.value})} placeholder="Exercise name" className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30" autoFocus/>
+            <div className="flex gap-3">
+              <input type="text" value={newExercise.muscle} onChange={e => setNewExercise({...newExercise, muscle: e.target.value})} placeholder="Target muscle" className="w-2/3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30" />
+              <input type="number" value={newExercise.targetSets} onChange={e => setNewExercise({...newExercise, targetSets: e.target.value})} placeholder="Sets" className="w-1/3 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30" />
             </div>
-            
-            <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-6 font-medium leading-relaxed bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-              Biarkan kosong jika Anda menggunakan <b>Pintasan Apple Health</b> untuk sinkronisasi otomatis. Isi manual hanya jika Anda tidak menggunakan iOS.
-            </p>
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => setIsAddingExercise(false)} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+              <button type="submit" disabled={!newExercise.name} className="flex-1 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors disabled:opacity-40">Add</button>
+            </div>
+          </form>
+        ) : (
+          <button 
+            onClick={() => setIsAddingExercise(true)} 
+            className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 font-semibold rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={18} /> Add Custom Exercise
+          </button>
+        )}
 
-            <form onSubmit={handleSaveHealthMetrics} className="space-y-4">
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Clock size={16}/></span>
-                <input type="number" value={healthMetrics.duration} onChange={(e) => setHealthMetrics({...healthMetrics, duration: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Durasi Latihan (Menit)" />
-              </div>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500"><Flame size={16}/></span>
-                <input type="number" value={healthMetrics.cals} onChange={(e) => setHealthMetrics({...healthMetrics, cals: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Kalori Terbakar (Kcal)" />
-              </div>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500"><Heart size={16}/></span>
-                <input type="number" value={healthMetrics.hr} onChange={(e) => setHealthMetrics({...healthMetrics, hr: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Avg Detak Jantung (BPM)" />
-              </div>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500"><MoonStar size={16}/></span>
-                <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Lama Tidur Semalam (Menit)" />
-              </div>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sky-500"><Wind size={16}/></span>
-                <input type="number" step="0.1" value={healthMetrics.spo2} onChange={(e) => setHealthMetrics({...healthMetrics, spo2: e.target.value})} className="w-full bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl pl-12 pr-4 py-4 text-[16px] sm:text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Oksigen Darah SpO2 (%)" />
-              </div>
-              
-              <button type="submit" className="w-full mt-4 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-                Simpan Manual
-              </button>
+        <button 
+           onClick={() => setShowEndSessionModal(true)}
+           className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+        >
+           <CheckSquare size={18} /> End Session
+        </button>
+
+        <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl p-5 space-y-3">
+          <h4 className="text-xs font-bold text-yellow-900 dark:text-yellow-100 uppercase flex items-center gap-2"><PenTool size={14} /> Session Notes</h4>
+          <textarea 
+            value={dailyNote}
+            onChange={(e) => handleSaveNote(e.target.value)}
+            placeholder="How did the session go?"
+            className="w-full bg-white dark:bg-slate-800 border border-yellow-200 dark:border-yellow-500/20 rounded-lg p-3 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-yellow-500/30 min-h-20 resize-none"
+          />
+        </div>
+
+      </main>
+
+      {/* Modals */}
+      {showEndSessionModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><CheckSquare size={18} /> End Session</h4>
+            <form onSubmit={handleSaveHealthMetrics} className="space-y-3">
+              <input type="number" value={healthMetrics.cals} onChange={(e) => setHealthMetrics({...healthMetrics, cals: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm" placeholder="Calories burned" />
+              <input type="number" value={healthMetrics.hr} onChange={(e) => setHealthMetrics({...healthMetrics, hr: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm" placeholder="Avg heart rate" />
+              <input type="number" value={healthMetrics.sleep} onChange={(e) => setHealthMetrics({...healthMetrics, sleep: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 text-sm" placeholder="Sleep (minutes)" />
+              <button type="submit" className="w-full py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">Save</button>
             </form>
+            <button onClick={() => setShowEndSessionModal(false)} className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-lg transition-colors">Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Floating Timer */}
-      {restTime > 0 && !showTimerModal && (
-        <button onClick={() => setShowTimerModal(true)} className="fixed bottom-6 right-6 z-40 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-10 border border-gray-700 dark:border-gray-200 hover:scale-105 transition-transform">
-           <Timer size={18} className="animate-pulse text-indigo-400 dark:text-indigo-600" />
-           <span className="font-black text-sm tracking-widest">
-             {Math.floor(restTime/60)}:{(restTime%60).toString().padStart(2, '0')}
-           </span>
-        </button>
-      )}
-
-      {/* Modal Kalender & Volume Insights */}
       {showInsightsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative animate-in zoom-in-95 duration-300 w-full max-w-md">
-            <button onClick={() => setShowInsightsModal(false)} className="absolute -top-12 right-0 p-2 bg-white/20 hover:bg-white/40 rounded-full text-white backdrop-blur-md transition-colors"><X size={20}/></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-md">
             <InsightsModal logs={logs} exerciseData={exerciseData} healthData={healthData} onClose={() => setShowInsightsModal(false)} />
           </div>
         </div>
       )}
 
-      {/* Modal Timer Manual */}
       {showTimerModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[36px] p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h4 className="text-sm font-black text-gray-400 uppercase tracking-widest flex items-center"><Timer size={18} className="mr-2 text-indigo-500" /> Rest Timer</h4>
-              <button onClick={() => setShowTimerModal(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors active:scale-90"><X size={16}/></button>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><Timer size={18} /> Rest Timer</h4>
+            <div className="text-5xl font-bold text-center text-slate-900 dark:text-white mb-4">
+              {Math.floor(restTime/60)}:{(restTime%60).toString().padStart(2, '0')}
             </div>
-            <div className="text-center mb-8">
-              <span className={`text-6xl font-black tabular-nums tracking-tighter ${restTime === 0 ? 'text-gray-300 dark:text-gray-700' : 'text-gray-900 dark:text-white'}`}>
-                {Math.floor(restTime/60)}:{(restTime%60).toString().padStart(2, '0')}
-              </span>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+               <button onClick={() => addTime(30)} className="py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors">+30s</button>
+               <button onClick={() => addTime(60)} className="py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors">+60s</button>
+               <button onClick={() => addTime(90)} className="py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors">+90s</button>
+               <button onClick={() => { setRestTime(0); setIsTimerRunning(false); }} className="py-2 bg-red-100 dark:bg-red-500/10 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors">Reset</button>
             </div>
-            <div className="grid grid-cols-4 gap-2 mb-6">
-               <button onClick={() => addTime(30)} className="py-3 bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 transition-all">+30s</button>
-               <button onClick={() => addTime(60)} className="py-3 bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 transition-all">+60s</button>
-               <button onClick={() => addTime(90)} className="py-3 bg-gray-50 dark:bg-[#1a1d27] border border-gray-200 dark:border-gray-800 rounded-2xl text-[11px] font-black text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 transition-all">+90s</button>
-               <button onClick={() => { setRestTime(0); setIsTimerRunning(false); }} className="py-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-900/30 rounded-2xl text-[11px] font-black text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 active:scale-95 transition-all">Reset</button>
-            </div>
-            <button onClick={() => setIsTimerRunning(!isTimerRunning)} disabled={restTime === 0} className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex justify-center items-center active:scale-95 transition-all ${isTimerRunning ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 disabled:opacity-40 disabled:grayscale'}`}>
-              {isTimerRunning ? <><Pause size={18} className="mr-2" /> Pause</> : <><Play size={18} className="mr-2" /> Mulai</>}
+            <button onClick={() => setIsTimerRunning(!isTimerRunning)} disabled={restTime === 0} className={`w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${isTimerRunning ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40'}`}>
+              {isTimerRunning ? <><Pause size={16} /> Pause</> : <><Play size={16} /> Start</>}
             </button>
+            <button onClick={() => setShowTimerModal(false)} className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-semibold transition-colors">Close</button>
           </div>
         </div>
       )}
 
-      {/* Modal Dialog Confirm */}
       {confirmDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11131a] w-full max-w-sm rounded-[32px] p-6 sm:p-8 shadow-2xl border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-300">
-            <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 tracking-tight">{confirmDialog.isAlert ? 'Pemberitahuan' : 'Konfirmasi'}</h4>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-8 font-medium leading-relaxed">{confirmDialog.message}</p>
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white">{confirmDialog.isAlert ? 'Notice' : 'Confirm'}</h4>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{confirmDialog.message}</p>
+            <div className="flex gap-3">
               {!confirmDialog.isAlert && (
-                <button onClick={() => setConfirmDialog(null)} className="flex-1 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs uppercase tracking-widest active:scale-95 transition-all">Batal</button>
+                <button onClick={() => setConfirmDialog(null)} className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors">Cancel</button>
               )}
-              <button onClick={confirmDialog.onConfirm} className={`flex-1 py-3.5 ${confirmDialog.isAlert ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'} text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all`}>
-                {confirmDialog.isAlert ? 'Mengerti' : 'Ya, Hapus'}
+              <button onClick={confirmDialog.onConfirm} className={`flex-1 py-2.5 rounded-lg text-xs font-semibold text-white transition-colors ${confirmDialog.isAlert ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}`}>
+                {confirmDialog.isAlert ? 'OK' : 'Delete'}
               </button>
             </div>
           </div>
